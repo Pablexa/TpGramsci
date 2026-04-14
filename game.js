@@ -339,9 +339,9 @@ function mobQuestion() {
 
     // Abilities check
     const p = localPlayer;
-    let btnProt = \`<button class="ability-btn \${!p.abilities.protector && !p.roundAbilities.protector ? 'consumed' : ''} \${p.roundAbilities.protector ? 'active-power' : ''}" onclick="useAbility('protector')" \${!p.abilities.protector ? 'disabled' : ''}>🛡️ Racha</button>\`;
-    let btnFift = \`<button class="ability-btn \${!p.abilities.fiftyfifty && !p.roundAbilities.fiftyfifty ? 'consumed' : ''} \${p.roundAbilities.fiftyfifty ? 'active-power' : ''}" onclick="useAbility('fiftyfifty')" \${!p.abilities.fiftyfifty ? 'disabled' : ''}>⚖️ 50/50</button>\`;
-    let btnDobl = \`<button class="ability-btn \${!p.abilities.double && !p.roundAbilities.double ? 'consumed' : ''} \${p.roundAbilities.double ? 'active-power' : ''}" onclick="useAbility('double')" \${!p.abilities.double ? 'disabled' : ''}>⚔️ x2</button>\`;
+    let btnProt = `<button class="ability-btn ${!p.abilities.protector && !p.roundAbilities.protector ? 'consumed' : ''} ${p.roundAbilities.protector ? 'active-power' : ''}" onclick="useAbility('protector')" ${!p.abilities.protector ? 'disabled' : ''}>🛡️ Racha</button>`;
+    let btnFift = `<button class="ability-btn ${!p.abilities.fiftyfifty && !p.roundAbilities.fiftyfifty ? 'consumed' : ''} ${p.roundAbilities.fiftyfifty ? 'active-power' : ''}" onclick="useAbility('fiftyfifty')" ${!p.abilities.fiftyfifty ? 'disabled' : ''}>⚖️ 50/50</button>`;
+    let btnDobl = `<button class="ability-btn ${!p.abilities.double && !p.roundAbilities.double ? 'consumed' : ''} ${p.roundAbilities.double ? 'active-power' : ''}" onclick="useAbility('double')" ${!p.abilities.double ? 'disabled' : ''}>⚔️ x2</button>`;
 
     let m = localPlayer.fiftyFiftyMask || [];
 
@@ -349,21 +349,21 @@ function mobQuestion() {
       <div class="mobile-container">
         
         <div style="display:flex; justify-content:space-between; gap:0.5rem; margin-bottom:1rem;">
-            \${btnProt}
-            \${btnFift}
-            \${btnDobl}
+            ${btnProt}
+            ${btnFift}
+            ${btnDobl}
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-           <span style="color:var(--primary); font-weight:bold;">\${localPlayer.score} Pts</span>
-           <div style="font-weight:bold; font-size:1.5rem;" id="mob-timer-num">\${timerLeft}</div>
+           <span style="color:var(--primary); font-weight:bold;">${localPlayer.score} Pts</span>
+           <div style="font-weight:bold; font-size:1.5rem;" id="mob-timer-num">${timerLeft}</div>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; height:65vh;">
-            <button class="mobile-answer-btn color-0 \${m.includes(0) ? 'erased' : ''}" onclick="submitAnswer(0)"></button>
-            <button class="mobile-answer-btn color-1 \${m.includes(1) ? 'erased' : ''}" onclick="submitAnswer(1)"></button>
-            <button class="mobile-answer-btn color-2 \${m.includes(2) ? 'erased' : ''}" onclick="submitAnswer(2)"></button>
-            <button class="mobile-answer-btn color-3 \${m.includes(3) ? 'erased' : ''}" onclick="submitAnswer(3)"></button>
+            <button class="mobile-answer-btn color-0 ${m.includes(0) ? 'erased' : ''}" onclick="submitAnswer(0)"></button>
+            <button class="mobile-answer-btn color-1 ${m.includes(1) ? 'erased' : ''}" onclick="submitAnswer(1)"></button>
+            <button class="mobile-answer-btn color-2 ${m.includes(2) ? 'erased' : ''}" onclick="submitAnswer(2)"></button>
+            <button class="mobile-answer-btn color-3 ${m.includes(3) ? 'erased' : ''}" onclick="submitAnswer(3)"></button>
         </div>
       </div>
     `;
@@ -376,11 +376,11 @@ function mobReveal() {
 
     app.innerHTML = `
         <div class="mobile-container slide-up">
-            <div class="result-screen \${correct ? 'win' : 'lose'}">
-                <h1 style="font-size:3rem; margin-bottom:1rem;">\${correct ? '¡Exacto!' : '¡Error!'}</h1>
-                <p style="font-size:1.5rem;">Total: \${localPlayer.score} Puntos</p>
+            <div class="result-screen ${correct ? 'win' : 'lose'}">
+                <h1 style="font-size:3rem; margin-bottom:1rem;">${correct ? '¡Exacto!' : '¡Error!'}</h1>
+                <p style="font-size:1.5rem;">Total: ${localPlayer.score} Puntos</p>
                 <div style="margin-top:2rem; font-size:1.2rem; background: rgba(0,0,0,0.3); padding:1rem; border-radius:10px;">
-                    \${isGain ? '+' : ''}\${localPlayer.lastScoreChange} Puntos Obtenidos
+                    ${isGain ? '+' : ''}${localPlayer.lastScoreChange} Puntos Obtenidos
                 </div>
             </div>
         </div>
