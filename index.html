@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antonio Gramsci | Obra y Pensamiento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- Modal de Textos Completos -->
+  <div id="text-modal" class="modal-overlay hidden">
+    <div class="modal-content box-glass p-4" style="max-width:800px; width:90%; position:relative;">
+      <button id="close-modal" class="btn-close">&times;</button>
+      <h2 id="modal-title" style="color:var(--primary);margin-bottom:1.5rem; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:1rem;"></h2>
+      <div id="modal-body" style="line-height:1.8;font-size:1.1rem;max-height:60vh;overflow-y:auto;padding-right:1rem;color:#e2e8f0;"></div>
+    </div>
+  </div>
+
+  <div class="mesh-bg"></div>
+
+  <nav class="navbar">
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L2 12l10 10 10-10L12 2z" fill="currentColor"/>
+      </svg>
+      <span>GRAMSCI</span>
+    </div>
+    <div class="nav-links">
+      <a href="#intro">Introducción</a>
+      <a href="#vida">Vida y Contexto</a>
+      <a href="#influencias">Influencias</a>
+      <a href="#pensamiento" style="margin-right:0.5rem;">Pensamiento</a>
+      <a href="/jugar?mode=host" class="btn-primary" style="background-color: white; color: black; font-weight: bold; padding: 0.5rem 1.5rem; text-decoration: none;">🎮 JUGAR</a>
+    </div>
+    <a href="#conclusion" class="btn-primary" style="background:transparent; border:1px solid rgba(255,255,255,0.3);">Síntesis</a>
+  </nav>
+
+  <main>
+    <!-- ACTO 1 -->
+    <section id="intro" class="hero observe">
+      <div class="badge">Un pensador fundamental del siglo XX &rarr;</div>
+      <div class="badge speaker-badge">🎙️ Persona 1</div>
+      <h1>Antonio Gramsci <button id="microphone-toggle" title="Ocultar guión" style="background:transparent;border:none;font-size:0.8em;cursor:pointer;opacity:0.7;padding:0.2em;border-radius:50%;transition:transform 0.2s;margin-left:0.5rem;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">🎙️</button>.</h1>
+      <p class="subtitle" style="margin-bottom: 1.5rem">
+        Filósofo, político, periodista y fundador del Partido Comunista de Italia.
+      </p>
+      <div class="hero-actions">
+        <a href="#vida" class="btn-primary btn-large">Comenzar</a>
+      </div>
+    </section>
+
+    <section class="container observe mt-8">
+      <div class="box-glass p-3 text-center mb-4 clickable-card" data-title="Introducción">
+        <h3>Introducción</h3>
+        <p>Antonio Gramsci fue uno de los pensadores marxistas más importantes del siglo XX...</p>
+        <div class="expand-hint">⤢ Toca para leer completo</div>
+        <div class="full-content d-none">
+          Antonio Gramsci fue uno de los pensadores marxistas más importantes del siglo XX. No fue solamente un filósofo o un teórico político: fue también periodista, militante, dirigente partidario, analista de la cultura y un intelectual profundamente comprometido con los conflictos de su tiempo. Nació el 23 de enero de 1891 en Ales, en Cerdeña, Italia, y murió el 27 de abril de 1937 en Roma, después de años de cárcel, enfermedad y persecución política bajo el fascismo. Fue fundador del Partido Comunista de Italia y es recordado sobre todo por sus Cuadernos de la cárcel, donde elaboró conceptos decisivos como hegemonía, sociedad civil, intelectual orgánico, bloque histórico, revolución pasiva y guerra de posiciones.
+        </div>
+      </div>
+    </section>
+
+    <section id="vida" class="container observe mt-8 position-relative">
+      <div class="badge speaker-badge" style="margin-bottom: 0;">🎙️ Persona 1</div>
+      <h2 class="section-title">La vida de Gramsci y su contexto</h2>
+      
+      <div class="split-layout mb-4">
+        <div class="box-glass p-3 clickable-card" data-title="Sus Orígenes en Cerdeña">
+          <h3>Sus orígenes</h3>
+          <p>Nació en 1891 en Cerdeña. La enorme pobreza de su tierra, contrastada fuertemente con la riqueza del norte, forjó su muy temprana sensibilidad política...</p>
+          <div class="expand-hint">⤢ Leer relato</div>
+          <div class="full-content d-none">
+            Gramsci nació en una familia humilde de Cerdeña, una región periférica y pobre de Italia. Su infancia estuvo marcada por fuertes dificultades económicas y por problemas de salud; además, el encarcelamiento de su padre empeoró la situación familiar. Esa experiencia de pobreza, desigualdad y marginalidad regional fue decisiva en su sensibilidad política posterior. Cerdeña formaba parte del sector más postergado del país, en contraste con el norte italiano, más industrial y dinámico. Ese contraste entre centro y periferia, entre desarrollo y atraso, quedó grabado en la mirada de Gramsci desde muy joven.
+          </div>
+        </div>
+        <div>
+          <img src="/assets/image2.png" alt="Mapa de Cerdeña" class="img-glass glow-img clickable-img" />
+          <p class="caption">Mapa de la isla de Cerdeña</p>
+        </div>
+      </div>
+
+      <div class="split-layout mb-4">
+        <div>
+          <img src="/assets/image3.png" alt="L'Ordine Nuovo" class="img-glass glow-img clickable-img" />
+          <p class="caption">“L’Ordine Nuovo”, Periódico creado por Gramsci</p>
+        </div>
+        <div class="box-glass p-3 clickable-card" data-title="Juventud y L'Ordine Nuovo">
+          <h3>Juventud y L'Ordine Nuovo</h3>
+          <p>Al llegar a la industrial Turín, se sumó de inmediato al movimiento obrero. Fundó el periódico revolucionario <em>L’Ordine Nuovo</em> y participó clavemente en la creación del Partido Comunista...</p>
+          <div class="expand-hint">⤢ Leer relato</div>
+          <div class="full-content d-none">
+            Cuando se trasladó a Turín para estudiar en la universidad, se encontró con un mundo completamente distinto. Turín era uno de los grandes centros industriales italianos, vinculado al crecimiento obrero, a las fábricas y a la modernización capitalista. Allí Gramsci entró en contacto con el movimiento socialista, con la vida intelectual moderna y con la experiencia concreta de la clase obrera industrial. Aunque no completó sus estudios universitarios, se formó de manera intensísima en historia, filosofía, lingüística, literatura, economía y política. Muy pronto se convirtió en periodista y militante socialista.
+            En los años posteriores a la Primera Guerra Mundial participó activamente en el debate revolucionario italiano. Fundó el periódico L’Ordine Nuovo, desde el cual defendió la importancia de los consejos de fábrica como una forma de autoorganización obrera. Para Gramsci, esos consejos no eran solo organismos sindicales; podían ser el embrión de una nueva forma de poder popular. Más tarde, en 1921, participó en la fundación del Partido Comunista de Italia. Poco después llegó a ser una figura central del comunismo italiano y fue elegido diputado.
+          </div>
+        </div>
+      </div>
+
+      <div class="split-layout mb-4">
+        <div class="box-glass p-3 clickable-card" data-title="Fascismo y Encarcelamiento">
+          <h3>Fascismo y Encarcelamiento</h3>
+          <p>Tras el estres de posguerra, la inestabilidad de Italia dio lugar al violento ascenso de Mussolini. Temiendo a las capacidades intelectuales de Gramsci, el nuevo orden lo condenó a prisión...</p>
+          <div class="expand-hint">⤢ Leer relato</div>
+          <div class="full-content d-none">
+            Sin embargo, mientras Gramsci crecía políticamente, Italia entraba en una crisis cada vez más profunda que terminó en la llegada del fascismo al poder. Tras la Marcha sobre Roma de 1922, Benito Mussolini inició el proceso que destruyó el régimen liberal y consolidó una dictadura de partido único. La represión alcanzó a socialistas, comunistas, sindicalistas, periodistas y opositores en general. En 1926, Gramsci fue arrestado por el régimen fascista y condenado a más de veinte años de prisión. Durante su encarcelamiento, a pesar del deterioro físico y de las durísimas condiciones de vida, escribió los famosos Cuadernos de la cárcel y las Cartas desde la cárcel, obras fundamentales del pensamiento político contemporáneo.
+            El período de posguerra estuvo atravesado por inflación, desempleo, descontento popular y radicalización política. En ese contexto, el fascismo se presentó como una fuerza de orden, pero en realidad se impuso mediante violencia paramilitar.
+          </div>
+        </div>
+        <div>
+          <img src="/assets/image4.jpeg" alt="Benito Mussolini" class="img-glass glow-img clickable-img" />
+          <p class="caption">Benito Mussolini, líder fascista italiano</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTO 2 -->
+    <section id="influencias" class="container observe mt-8">
+      <h2 class="section-title">Influencias</h2>
+      <div class="badge speaker-badge" style="margin: 0 auto 1rem auto; display: block; width: fit-content;">🎙️ Persona 1</div>
+      
+      <div class="box-glass p-3 mb-4 text-center clickable-card" data-title="¿Quiénes influenciaron a Gramsci?">
+        <p>Gramsci fue influido por varias tradiciones al mismo tiempo. No fue un pensador cerrado ni dogmático. Puso al marxismo en diálogo con el neoidealismo italiano...</p>
+        <div class="expand-hint" style="text-align:center;">⤢ Toca aquí</div>
+        <div class="full-content d-none">
+          Gramsci fue influido por varias tradiciones al mismo tiempo. No fue un pensador cerrado ni dogmático. Su pensamiento se formó en diálogo con Marx, Engels, Lenin y la tradición marxista, pero también con corrientes filosóficas italianas de su tiempo, especialmente el neoidealismo. La Stanford Encyclopedia of Philosophy destaca que Gramsci puso al marxismo en diálogo con el neoidealismo italiano, con las tradiciones intelectuales de Maquiavelo y con las principales corrientes del pensamiento marxista.
+        </div>
+      </div>
+
+      <div class="grid-layout mb-4">
+        <div class="card box-glass clickable-card" data-title="Influencia: Marx y Engels">
+            <img src="/assets/image1.jpeg" alt="Marx y Engels" class="card-img" />
+            <div class="card-content">
+              <h3>Marx y Engels</h3>
+              <p>Base de su pensamiento marxista: centralidad en la lucha de clases y crítica del capitalismo...</p>
+              <div class="expand-hint">⤢ Expandir</div>
+              <div class="full-content d-none">
+                La base de su pensamiento es claramente marxista. De Marx toma la centralidad de la lucha de clases, la crítica del capitalismo y la idea de que la realidad social es histórica y transformable. Pero Gramsci se aparta de las versiones más mecanicistas del marxismo, aquellas que reducían la política y la cultura a un simple “reflejo” de la economía. En esto, su aporte fue decisivo: mostró que superestructura, cultura, educación, religión, moral, prensa y lenguaje no son un adorno secundario, sino terrenos fundamentales de poder.
+              </div>
+            </div>
+        </div>
+        <div class="card box-glass clickable-card" data-title="Influencia: Vladimir Lenin">
+            <img src="/assets/image5.jpeg" alt="Vladimir Lenin" class="card-img" />
+            <div class="card-content">
+              <h3>Vladimir Lenin</h3>
+              <p>Influencia clave por la cuestión del partido y estrategia revolucionaria. Gramsci tradujo los conceptos leninistas a occidente...</p>
+              <div class="expand-hint">⤢ Expandir</div>
+              <div class="full-content d-none">
+                Lenin también fue una influencia importante, especialmente por la cuestión del partido, la estrategia revolucionaria y la lucha por la dirección política. Sin embargo, Gramsci no copió a Lenin mecánicamente. Más bien intentó traducir ciertos problemas leninistas al contexto de Europa occidental, donde el Estado y la sociedad civil eran más complejos que en la Rusia zarista.
+              </div>
+            </div>
+        </div>
+        <div class="card box-glass clickable-card" data-title="Influencia: Maquiavelo">
+            <div class="card-content">
+              <h3>Maquiavelo</h3>
+              <p>Gramsci lo releyó como un pensador de la construcción de poder y voluntad colectiva. El partido político se convierte en el "Príncipe Moderno".</p>
+              <div class="expand-hint">⤢ Expandir</div>
+              <div class="full-content d-none">
+                Maquiavelo fue otra gran influencia. Gramsci lo releyó como un pensador de la fundación política, de la voluntad colectiva y de la construcción de poder. En varios pasajes, Gramsci piensa al partido revolucionario como una especie de “Príncipe moderno”: no un individuo, sino una organización capaz de construir una voluntad colectiva nacional-popular.
+              </div>
+            </div>
+        </div>
+        <div class="card box-glass clickable-card" data-title="Influencia: Benedetto Croce">
+            <img src="/assets/image6.jpeg" alt="Benedetto Croce" class="card-img" />
+            <div class="card-content">
+              <h3>Benedetto Croce</h3>
+              <p>Representante del neoidealismo. Tomó la importancia de la historia, la subjetividad y la vida ética...</p>
+              <div class="expand-hint">⤢ Expandir</div>
+              <div class="full-content d-none">
+                También estuvo muy influido por el clima filosófico italiano, sobre todo por Benedetto Croce, aunque en una relación crítica. De ese ambiente tomó la importancia de la historia, de la cultura, de la subjetividad y de la vida ética, pero rechazó el idealismo liberal de Croce como insuficiente para comprender las relaciones de clase y la dominación material.
+                En síntesis, Gramsci fue influido por el marxismo, por Lenin, por Maquiavelo y por la tradición filosófica italiana; pero lo más importante es que transformó todas esas influencias en algo propio. No repitió: reelaboró.
+              </div>
+            </div>
+        </div>
+      </div>
+
+      <div class="box-glass p-3 mb-4 clickable-card" data-title="¿A quiénes influenció Gramsci?">
+        <h3>El Legado Posteríor</h3>
+        <p>Su influencia fue inmensa en el marxismo occidental y disciplinas como estudios culturales, sociología y pedagogía poscolonial...</p>
+        <div class="expand-hint">⤢ Expandir texto</div>
+        <div class="full-content d-none">
+          La influencia de Gramsci fue inmensa y creció sobre todo después de su muerte. Sus ideas pasaron a ser una parte fundamental del marxismo occidental y tuvieron gran impacto en las estrategias de los partidos comunistas de posguerra.
+          También influyó profundamente en los estudios culturales, la sociología, la teoría política, la historia social, la pedagogía crítica y los estudios poscoloniales. Diversas fuentes destacan que la noción de hegemonía de Gramsci fue especialmente importante para el desarrollo de los estudios culturales y para autores como Raymond Williams y Stuart Hall.
+          Además, su pensamiento fue muy utilizado por historiadores sociales y por corrientes críticas interesadas en comprender cómo las clases dominantes sostienen su poder no solo por coerción sino también mediante instituciones que moldean la opinión pública, la educación y la cultura. Britannica señala justamente que historiadores como Eugene Genovese recurrieron a Gramsci para analizar la hegemonía como una forma de hacer que el dominio parezca natural e inevitable.
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTO 3 -->
+    <section id="pensamiento" class="container observe mt-8">
+      <h2 class="section-title">El Pensamiento de Gramsci</h2>
+
+      <div class="bento-grid mb-4">
+        <div class="bento-item box-glass bento-large position-relative clickable-card" data-title="Hegemonía y Lucha de Clases">
+          <div class="badge speaker-badge">🎙️ Persona 2</div>
+          <h3>La hegemonía y la lucha de clases</h3>
+          <p>La hegemonía es la capacidad de dirigir a otras clases por el consenso, no solo por fuerza...</p>
+          <div class="expand-hint">⤢ Expandir Lectura</div>
+          <div class="full-content d-none">
+            La hegemonía es uno de los conceptos más famosos de Gramsci. En un sentido simple, significa la capacidad de una clase social para dirigir a otras no solo por la fuerza, sino también por el consenso. La clase dominante no gobierna únicamente porque controla el Estado, la policía o el ejército. Gobierna también porque logra que sus valores, sus ideas, su visión del mundo y su “sentido común” sean aceptados como naturales por amplios sectores de la sociedad.
+            Esto se relaciona directamente con la lucha de clases porque, para Gramsci, las clases no luchan solamente en el terreno económico. También luchan por definir qué ideas parecen verdaderas, qué costumbres parecen normales, qué valores parecen legítimos y qué proyecto de sociedad puede presentarse como universal. La burguesía triunfa no solo cuando domina la economía, sino cuando hace que su interés particular aparezca como interés general. Ahí está el núcleo de la hegemonía. Entonces, la lucha de clases incluye una dimensión cultural, moral, educativa e ideológica.
+          </div>
+        </div>
+        
+        <div class="bento-item box-glass position-relative clickable-card" data-title="Sociedad Civil y Política">
+          <div class="badge speaker-badge">🎙️ Persona 2</div>
+          <h3>Sociedad civil y política</h3>
+          <p>El Estado ampliado combina la coerción (estado) y el consenso (iglesia, escuela)...</p>
+          <div class="expand-hint">⤢ Expandir</div>
+          <div class="full-content d-none">
+            Gramsci distingue entre sociedad política y sociedad civil para mostrar cómo juntas forman el entramado del poder moderno. La sociedad política refiere más directamente al aparato estatal en sentido estricto: gobierno, leyes, administración, tribunales, policía, ejército. Es el ámbito donde predomina la coerción. La sociedad civil, en cambio, incluye asociaciones, escuelas, Iglesia, medios, sindicatos, vida cultural, prensa, intelectuales y múltiples instituciones donde se organiza el consenso.
+            La importancia de esta distinción es enorme. En las sociedades modernas, el dominio no funciona solo desde “arriba” mediante la represión estatal. Funciona también a través de la vida cotidiana y las instituciones que forman creencias, hábitos y lealtades. Por eso, para Gramsci, el poder es más profundo y complejo que un simple aparato represivo.
+          </div>
+        </div>
+
+        <div class="bento-item box-glass position-relative clickable-card" data-title="La Ideología">
+          <div class="badge speaker-badge">🎙️ Persona 2</div>
+          <h3>La ideología</h3>
+          <p>No es mentira, es el conjunto de valores y marcos morales instaurados como naturales...</p>
+          <div class="expand-hint">⤢ Expandir</div>
+          <div class="full-content d-none">
+            La ideología, en Gramsci, no debe entenderse solamente como “mentira” o “engaño”. Tiene un sentido más complejo. Se refiere al conjunto de ideas, representaciones, valores, sentidos comunes, concepciones del mundo y marcos morales a través de los cuales las personas interpretan la realidad. En la lucha por la hegemonía, la ideología es decisiva porque organiza la manera en que una sociedad piensa lo que es normal, justo, posible o inevitable. 
+            Las clases subalternas no deben limitarse a denunciar la ideología dominante; necesitan construir una concepción del mundo propia, coherente, crítica y capaz de volverse colectiva. Sin esa elaboración ideológica, no hay contrahegemonía posible.
+          </div>
+        </div>
+        
+        <div class="bento-item box-glass block-full position-relative clickable-card" data-title="Contrahegemonía">
+          <div class="badge speaker-badge">🎙️ Persona 2</div>
+          <h3>Contrahegemonía para desafiar al capital</h3>
+          <p>Es construir una nueva dirección mediante una larga "guerra de posiciones"...</p>
+          <div class="expand-hint">⤢ Leer en detalle</div>
+          <div class="full-content d-none">
+            La contrahegemonía es la construcción de una dirección alternativa por parte de las clases subalternas. No consiste solo en oponerse al poder existente, sino en crear una visión del mundo distinta, instituciones propias, formas culturales nuevas, organización política y una voluntad colectiva capaz de disputar la conducción de la sociedad.
+            Para Gramsci, una clase subalterna no vence únicamente cuando protesta. Vence cuando consigue pasar de ser un grupo dominado a ser una fuerza dirigente. Eso implica organizarse políticamente, elaborar una concepción del mundo, construir alianzas, y disputar la cultura, la moral y el sentido común. En occidente, esto requiere una "guerra de posiciones": ocupación cultural lenta en lugar de una ruptura violenta repentina.
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-layout mb-4">
+        <div class="card box-glass position-relative clickable-card" data-title="El intelectual orgánico">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 2</div>
+            <h3>El intelectual orgánico</h3>
+            <p>La clase obrera necesita pensadores orgánicos propios para dirigir culturalmente...</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              El intelectual orgánico es otro concepto central de Gramsci. Él sostiene que toda clase social produce sus propios intelectuales. No se refiere solamente a profesores, escritores o filósofos, sino a todas las personas que organizan, articulan, difunden y vuelven coherente una determinada visión del mundo. Los intelectuales orgánicos son los que nacen vinculados a una clase y ayudan a darle conciencia, dirección y capacidad organizativa. En oposición a los tradicionales (como la burocracia del clero), los obreros y grupos populares demandaban formar los suyos propios si querían dirigir la nación de verdad.
+            </div>
+          </div>
+        </div>
+        <div class="card box-glass position-relative clickable-card" data-title="Cultura y Política">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 3</div>
+            <h3>Cultura y Política</h3>
+            <p>La cultura es campo primario de poder donde se forman sensibilidades...</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              Para Gramsci, cultura y política están profundamente unidas. La cultura no es un adorno ni algo secundario; es uno de los principales campos donde se organiza el poder. En la cultura se forman hábitos, lenguajes, sensibilidades, valores y visiones del mundo. Por eso, quien domina culturalmente tiene una ventaja política enorme. Una canción, una escuela, un manual escolar o una costumbre determinan el límite de lo posible.
+            </div>
+          </div>
+        </div>
+        <div class="card box-glass position-relative clickable-card" data-title="La educación">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 3</div>
+            <h3>La educación</h3>
+            <p>Medio inquebrantable para formar o romper el consenso capitalista...</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              La escuela no es neutral: siempre participa, de una manera u otra, en la formación de una concepción del mundo. En una sociedad dominada por una clase hegemónica, la educación tiende a reproducir el orden existente y a domesticar jerarquías haciéndonos peones funcionales. Pero la educación también puede ser un instrumento liberador y poderoso si propulsa disciplina intelectual, historia y ética a las masas para emanciparlas.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-layout mb-4">
+        <div class="card box-glass position-relative clickable-card" data-title="Bloque histórico">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 3</div>
+            <h3>Bloque histórico</h3>
+            <p>Alianza masiva logrando unidad ideológica profunda en pos de derrotar el monopolio.</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              El bloque histórico es la articulación entre estructura económica, instituciones políticas, ideología, cultura y alianzas sociales bajo una determinada dirección. Crear un nuevo bloque histórico significa construir una alianza amplia entre distintos sectores subalternos que no solo se unan contra algo, sino alrededor de un proyecto común. En el caso italiano, Gramsci pensaba especialmente en la firme necesidad de unir obreros fabriles del norte y pobres campesinos del sur, suturando la división del país.
+            </div>
+          </div>
+        </div>
+        <div class="card box-glass position-relative clickable-card" data-title="Revolución pasiva">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 3</div>
+            <h3>Revolución pasiva</h3>
+            <p>Cuando el élite cede migajas para frenar revoluciones grandes...</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              La revolución pasiva es un concepto para describir reformas desde arriba. Las élites introducen pequeños cambios, pero sin movilización autonóma y cuidando de que las masas no roben el cetro. Es una modernización conservadora: ceden demandas limitadas solo para neutralizar amenazas radicales. Entender esto permite no dejarse ser engañado por reformas progresistas que esconden el sostenimiento del imperio capital.
+            </div>
+          </div>
+        </div>
+        <div class="card box-glass position-relative clickable-card" data-title="Teoría y práctica">
+          <div class="card-content">
+            <div class="badge speaker-badge">🎙️ Persona 3</div>
+            <h3>Teoría y práctica</h3>
+            <p>La teoría debe volverse instrumento vivo del partido actuante.</p>
+            <div class="expand-hint">⤢ Expandir</div>
+            <div class="full-content d-none">
+              Para Gramsci, teoría y práctica no deben separarse jamás. La teoría sin práctica se vuelve abstracta y elitista de cristal; la práctica sin teoría se vuelve ciega o improvisada. La acción política necesita comprensión histórica del terreno. De ahí la gran devoción que dedicó a construir el Partido de manera tal que actuase con intelectualidad viva.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONCLUSIÓN -->
+    <section id="conclusion" class="container observe mt-8 mb-4 position-relative" style="margin-bottom: 8rem;">
+      <div class="badge speaker-badge" style="margin: 0 auto 1rem auto; display: table;">🎙️ Persona 3</div>
+      <h2 class="section-title">Síntesis y Conclusión</h2>
+      
+      <div class="box-glass p-3 mb-4 clickable-card" data-title="Síntesis Final (Revisión)">
+        <h3>Síntesis de su pensamiento</h3>
+        <p>Gramsci quiso explicar cómo las clases dominantes se mantienen en el poder y cómo se logra una alternativa realista.</p>
+        <div class="expand-hint text-center">⤢ Expandir lectura final</div>
+        <div class="full-content d-none">
+          Si hubiera que resumir a Gramsci en una idea grande, podría decirse así: quiso explicar por qué las clases dominantes logran mantenerse en el poder incluso cuando generan desigualdad y conflicto, y cómo las clases subalternas podrían construir una alternativa real.
+          Su respuesta fue que el poder moderno no se sostiene solo en la economía ni solo en la violencia. Se sostiene también en la cultura, la educación, la ideología, el lenguaje, la moral y el sentido común. Por eso la transformación social requiere una larguísima disputa intelectual frente a frente.
+        </div>
+      </div>
+
+      <div class="box-glass p-3 mb-4">
+        <h3>Conclusión del Proyecto</h3>
+        <p>Antonio Gramsci enseñó valiosamente que la clase dominante no dicta sus reglas solamente con tanques, sino dictaminando nuestra óptica del mundo.</p>
+        
+        <div style="margin-top: 3rem; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 10px;">
+             <p style="text-align: center; font-size: 0.9rem; margin-bottom: 0;">Trabajo Original de Extracción de Windows Word</p>
+             <a href="/assets/ANTONIO_GRAMSCI.docx" download="ANTONIO_GRAMSCI_TrabajoPractico.docx" class="btn-primary btn-large" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+               DESCARGAR WORD ORIGINAL
+             </a>
+        </div>
+      </div>
+
+      <div class="box-glass p-3">
+        <h3>Bibliografía</h3>
+        <ul>
+            <li><a href="https://www.britannica.com/biography/Antonio-Gramsci" target="_blank">Britannica: Antonio Gramsci</a></li>
+            <li><a href="https://www.treccani.it/enciclopedia/antonio-gramsci_%28altro%29/" target="_blank">Treccani: Antonio Gramsci</a></li>
+            <li><a href="https://plato.stanford.edu/entries/gramsci/" target="_blank">Stanford Encyclopedia of Philosophy</a></li>
+            <li>Otros 7 enlaces anexos vinculados en la extracción oficial.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="logo">
+      <span>GRAMSCI</span>
+    </div>
+    <p>Proyecto realizado por: <strong>Martin Di Iorio, Vicente Sebastiano y Valentino Leverone</strong></p>
+  </footer>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

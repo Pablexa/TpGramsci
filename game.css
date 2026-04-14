@@ -1,0 +1,60 @@
+/* game.css */
+body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+
+.slide-up { animation: slideUp 0.4s ease-out; }
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* Vistas HOST */
+.host-container { width: 100vw; height: 100vh; padding: 2rem; display: flex; flex-direction: column; overflow-y: auto; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.room-code-huge { font-size: 6rem; font-weight: 800; letter-spacing: 0.5rem; text-align: center; color: var(--primary); text-shadow: 0 0 20px rgba(16,163,127,0.5); margin: 0; }
+.room-pin-text { font-size: 1.5rem; text-align: center; color: var(--text-muted); text-transform: uppercase; letter-spacing: 2px;}
+
+.lobby-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem; flex: 1; }
+.group-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem; }
+.group-title { font-size: 1.2rem; margin-bottom: 1rem; color: var(--primary); font-weight: 600; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.5rem;}
+.player-list { display: flex; flex-direction: column; gap: 0.5rem; }
+.player-chip { display: flex; justify-content: space-between; background: rgba(0,0,0,0.2); padding: 0.5rem 1rem; border-radius: 8px; font-size: 1rem; }
+
+.question-title { font-size: 3rem; text-align: center; margin: 2rem 0; font-weight: 700; max-width: 1000px; margin: 2rem auto;}
+.category-badge { display: inline-block; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 0.5rem 1.5rem; border-radius: 20px; font-weight: 600; margin: 0 auto; }
+.host-timer { font-size: 4rem; font-weight: bold; width: 120px; height: 120px; border-radius: 50%; border: 6px solid var(--primary); display: flex; align-items: center; justify-content: center; margin: 1rem auto; background: rgba(0,0,0,0.3);}
+
+.answer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; width: 100%; max-width: 1000px; margin: 2rem auto;}
+.answer-box { padding: 3rem 2rem; font-size: 1.8rem; border-radius: 12px; font-weight: bold; color: white; display: flex; align-items: center; min-height: 150px; }
+.answer-box.dimmed { opacity: 0.3; }
+
+/* Colors */
+.color-0 { background: #e21b3c; border-bottom: 6px solid #b0152e;} 
+.color-1 { background: #1368ce; border-bottom: 6px solid #0e52a3;} 
+.color-2 { background: #d89e00; border-bottom: 6px solid #a87b00;} 
+.color-3 { background: #26890c; border-bottom: 6px solid #1c6609;} 
+
+.color-bet { background: #8b5cf6; border-bottom: 6px solid #6d28d9;}
+
+/* Rankings */
+.ranking-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 2rem;}
+.rank-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 0.5rem; }
+.rank-item.eliminated { opacity: 0.5; filter: grayscale(100%); text-decoration: line-through;}
+
+/* Vistas MOBILE */
+.mobile-container { width: 100vw; height: 100vh; padding: 1.5rem; display: flex; flex-direction: column; overflow-y: auto;}
+.mobile-form { display: flex; flex-direction: column; gap: 1rem; width: 100%; max-width: 400px; margin: auto; }
+.mobile-input, .mobile-select { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 1rem; border-radius: 8px; font-size: 1.2rem; font-family: 'Inter'; }
+.mobile-select option { background: #111; color: white; }
+
+.status-wait { margin: auto; text-align: center; font-size: 1.5rem; font-weight: bold; }
+.status-wait p { color: var(--text-muted); font-size: 1.1rem; margin-top: 1rem; font-weight: normal;}
+
+.mobile-answer-btn { height: 20vh; border-radius: 12px; border: none; margin-bottom: 1rem; width: 100%; transition: transform 0.1s; cursor: pointer; }
+.mobile-answer-btn:active { transform: scale(0.95); }
+
+.credit-slider { width: 100%; margin: 2rem 0; accent-color: var(--primary); }
+.bet-display { font-size: 3rem; font-weight: bold; text-align: center; color: var(--primary); margin: 1rem 0; }
+
+.result-screen { margin: auto; text-align: center; }
+.result-screen.win { background: rgba(38, 137, 12, 0.2); padding: 3rem; border-radius: 20px; border: 2px solid #26890c; }
+.result-screen.lose { background: rgba(226, 27, 60, 0.2); padding: 3rem; border-radius: 20px; border: 2px solid #e21b3c; }
+
+/* Control del host */
+.host-controls { position: fixed; bottom: 2rem; right: 2rem; display: flex; gap: 1rem; }
