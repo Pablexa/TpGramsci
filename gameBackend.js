@@ -2,8 +2,6 @@ import { Server } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
 
-// Load questions from public/questions.json at runtime
-// Given we run from webapp folder
 const questionsPath = path.resolve('public/questions.json');
 let questionsDB = [];
 try {
@@ -31,7 +29,6 @@ export function setupGameBackend(httpServer) {
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
-    // HOST ACTIONS
     socket.on('createRoom', (data, callback) => {
         const roomId = generateCode();
         const room = {
@@ -53,7 +50,7 @@ export function setupGameBackend(httpServer) {
             timerLeft: 0,
             finalists: [],
             isFinalPhase: false,
-            tiedPlayers: [], // For rock paper scissors
+            tiedPlayers: [],
             tieBreakerChoices: {} 
         };
         rooms.set(roomId, room);
@@ -76,124 +73,106 @@ export function setupGameBackend(httpServer) {
         }
     });
 
-    // PLAYER ACTIONS
     socket.on('joinRoom', (data, callback) => {
-        const { roomId, name, avatar, groupId } = data;
+        const { roomId, name, avatar, groupId, sessionId } = data;
         const room = rooms.get(roomId.toUpperCase());
         
-        if (!room) {
-            return callback({ success: false, message: 'La sala no existe.' });
-        }
-        if (room.state !== 'LOBBY') {
-            return callback({ success: false, message: 'La partida ya comenzó.' });
-        }
+        if (!room) return callback({ success: false, message: 'La sala no existe.' });
+        if (room.state !== 'LOBBY') return callback({ success: false, message: 'La partida ya comenzó.' });
 
-        // Check group limits (max 6)
-        const playersInGroup = Object.values(room.players).filter(p => p.groupId === groupId).length;
-        if (playersInGroup >= 6) {
-           return callback({ success: false, message: 'El grupo está lleno (Máximo 6).' });
-        }
+        const sid = sessionId || socket.id;
 
         const newPlayer = {
             id: socket.id,
+            sessionId: sid,
             name: name.substring(0, 15),
             avatar: avatar,
             groupId: groupId,
-            credits: 100,
-            currentBet: 0,
+            score: 0,
             currentAnswer: null,
             timeTaken: 0,
             streak: 0,
             isEliminated: false,
-            lastCreditChange: 0
+            lastScoreChange: 0,
+            abilities: {
+                protector: true,
+                fiftyfifty: true,
+                double: true
+            },
+            roundAbilities: {} 
         };
 
-        room.players[socket.id] = newPlayer;
+        room.players[sid] = newPlayer;
         socket.join(roomId.toUpperCase());
         callback({ success: true, player: newPlayer });
         broadcastRoomUpdate(roomId.toUpperCase());
     });
 
-    socket.on('placeBet', (data, callback) => {
-        const { roomId, bet } = data;
-        const room = rooms.get(roomId);
-        if (!room || room.state !== 'BETTING') return;
-        
-        const player = room.players[socket.id];
-        if (player && !player.isEliminated && bet <= player.credits && bet >= 0) {
-            player.currentBet = bet;
-            player.currentAnswer = null; // reset answer
-            callback({ success: true });
-            
-            // Inform host that someone bet
-            io.to(room.hostId).emit('playerAction', { event: 'betPlaced', id: socket.id });
+    socket.on('rejoinRoom', (data, callback) => {
+        const { roomId, sessionId } = data;
+        if (!roomId || !sessionId) return callback({success: false});
+        const room = rooms.get(roomId.toUpperCase());
+        if(room && room.players[sessionId]) {
+            room.players[sessionId].id = socket.id; 
+            socket.join(roomId.toUpperCase());
+            callback({ success: true, player: room.players[sessionId], roomState: room.state });
+        } else {
+            callback({ success: false });
         }
     });
 
     socket.on('submitAnswer', (data, callback) => {
-        const { roomId, answerIndex, timeRemaining } = data;
+        const { roomId, sessionId, answerIndex, timeRemaining } = data;
         const room = rooms.get(roomId);
         if (!room || room.state !== 'QUESTION') return;
 
-        const player = room.players[socket.id];
+        const player = room.players[sessionId];
         if (player && !player.isEliminated && player.currentAnswer === null) {
             player.currentAnswer = answerIndex;
-            const qTime = room.questions[room.currentQuestion]?.timeLimit || 25;
+            const qTime = room.questions[room.currentQuestion]?.timeLimit || 15;
             player.timeTaken = qTime - timeRemaining; 
             callback({ success: true });
-            io.to(room.hostId).emit('playerAction', { event: 'answered', id: socket.id });
+            io.to(room.hostId).emit('playerAction', { event: 'answered', id: player.id });
         }
     });
 
-    // Rock paper scissors logic
-    socket.on('submitTieBreaker', (data) => {
-        const { roomId, choice } = data; // rock, paper, scissors
+    socket.on('activateAbility', (data, callback) => {
+        const { roomId, sessionId, abilityName } = data;
         const room = rooms.get(roomId);
-        if (room && room.state === 'TIE_BREAKER') {
-            room.tieBreakerChoices[socket.id] = choice;
-            io.to(room.hostId).emit('playerAction', { event: 'rpsChosen', id: socket.id });
+        if(!room || room.state !== 'QUESTION') return;
+
+        const p = room.players[sessionId];
+        if (p && p.abilities[abilityName] && p.currentAnswer === null) {
+            p.abilities[abilityName] = false; 
+            p.roundAbilities[abilityName] = true; 
             
-            // Check if everyone has chosen
-            if (Object.keys(room.tieBreakerChoices).length === room.tiedPlayers.length) {
-                 resolveTieBreaker(room, io);
+            if (abilityName === 'fiftyfifty') {
+                const q = room.questions[room.currentQuestion];
+                let wrongs = [0,1,2,3].filter(i => i !== q.correcta);
+                wrongs.sort(() => Math.random() - 0.5);
+                callback({ success: true, disable: [wrongs[0], wrongs[1]] });
+            } else {
+                callback({ success: true });
             }
         }
     });
-
 
     socket.on('disconnect', () => {
-        // We will just let them stay in memory for now, or mark offline
-        // In a school setting, disconnecting and reconnecting might be complex without session tokens
-        // For simplicity, we just keep their score if they disconnect, they won't be able to answer
         rooms.forEach((room, roomId) => {
-            if (room.players[socket.id]) {
-                // If in lobby, remove them
-                if (room.state === 'LOBBY') {
-                    delete room.players[socket.id];
-                    broadcastRoomUpdate(roomId);
-                } else {
-                    // Mark disconnected but keep state
-                    room.players[socket.id].disconnected = true;
-                }
-            }
             if (room.hostId === socket.id) {
-                // Host left, room closed
                 io.to(roomId).emit('roomClosed');
                 rooms.delete(roomId);
             }
         });
     });
 
-    // --- Helper Functions in Scope ---
     function broadcastRoomUpdate(roomId) {
         const room = rooms.get(roomId);
         if (!room) return;
-        
-        // Strip sensitive info (e.g. correct answers) before broadcasting to everyone
         const safeRoom = {
             ...room,
             questions: null,
-            timerInterval: null // do not send interval object
+            timerInterval: null
         };
         io.to(roomId).emit('roomUpdate', safeRoom);
     }
@@ -215,33 +194,32 @@ export function setupGameBackend(httpServer) {
 
     function goToNextQuestion(room) {
         if (room.currentQuestion >= room.questions.length) {
-            // End of game
             room.state = 'END';
             broadcastRoomUpdate(room.id);
             return;
         }
 
         const q = room.questions[room.currentQuestion];
-        room.state = 'BETTING';
+        room.state = 'PREPARE_QUESTION';
         
-        // Reset bets
-        Object.values(room.players).forEach(p => { p.currentBet = 0; p.currentAnswer = null; });
+        Object.values(room.players).forEach(p => { 
+            p.currentAnswer = null; 
+            p.roundAbilities = {};
+        });
 
         broadcastRoomUpdate(room.id);
         io.to(room.id).emit('questionData', { 
             text: q.texto, category: q.categoria, phase: q.fase 
         });
 
-        startTimer(room, 10, () => {
-            // Transition to QUESTION
+        startTimer(room, 5, () => {
             room.state = 'QUESTION';
             broadcastRoomUpdate(room.id);
             io.to(room.id).emit('questionData', {
                 text: q.texto, category: q.categoria, phase: q.fase, options: q.opciones
             });
 
-            startTimer(room, q.timeLimit || 25, () => {
-                // Time up, go to Reveal
+            startTimer(room, q.timeLimit || 15, () => {
                 resolveQuestion(room);
             });
         });
@@ -254,20 +232,35 @@ export function setupGameBackend(httpServer) {
         Object.values(room.players).forEach(p => {
             if (p.isEliminated) return;
             
-            p.lastCreditChange = 0;
+            p.lastScoreChange = 0;
+            const double = p.roundAbilities.double ? 2 : 1;
+
             if (p.currentAnswer === q.correcta) {
-                 p.credits += p.currentBet;
-                 p.lastCreditChange = p.currentBet;
-                 p.streak += 1;
+                let pointsBase = 100 - (Math.floor(p.timeTaken) * 3);
+                let safePoints = Math.max(25, pointsBase);
+                let gain = (safePoints * double) + (p.streak * 10);
+                
+                p.score += gain;
+                p.lastScoreChange = gain;
+                p.streak += 1;
             } else {
-                 p.credits -= p.currentBet;
-                 p.lastCreditChange = -p.currentBet;
-                 p.streak = 0;
-                 if (p.credits <= 0) {
-                     p.credits = 0;
-                     p.isEliminated = true;
-                 }
+                let penalty = (-50) * double;
+                
+                // penalización suave si estuvo AFK
+                if (p.currentAnswer === null) penalty = -25;
+                
+                // Protector de racha
+                if (p.roundAbilities.protector && p.currentAnswer !== null) {
+                    penalty = 0; 
+                } else {
+                    p.streak = 0; 
+                }
+
+                p.score += penalty;
+                p.lastScoreChange = penalty;
+                if (p.score < 0) p.score = 0;
             }
+            p.roundAbilities = {};
         });
 
         broadcastRoomUpdate(room.id);
@@ -283,8 +276,6 @@ export function setupGameBackend(httpServer) {
             broadcastRoomUpdate(room.id);
         } else if (room.state === 'LEADERBOARD') {
             room.currentQuestion += 1;
-
-            // Check if we switch to Fase 2 or End Game
             if (room.currentQuestion < room.questions.length) {
                 const nextQ = room.questions[room.currentQuestion];
                 if (nextQ.fase === 2 && !room.isFinalPhase) {
@@ -300,23 +291,20 @@ export function setupGameBackend(httpServer) {
 
     function initiatePhase2(room) {
         room.isFinalPhase = true;
-        
-        // Find best of each group
         const finalists = [];
         room.groups.forEach(g => {
              const groupPlayers = Object.values(room.players).filter(p => p.groupId === g.id && !p.isEliminated);
              if (groupPlayers.length > 0) {
-                 const maxCredits = Math.max(...groupPlayers.map(p => p.credits));
-                 const tops = groupPlayers.filter(p => p.credits === maxCredits);
+                 const maxScore = Math.max(...groupPlayers.map(p => p.score));
+                 const tops = groupPlayers.filter(p => p.score === maxScore);
                  finalists.push(...tops);
              }
         });
 
-        room.finalists = finalists.map(f => f.id);
+        room.finalists = finalists.map(f => f.sessionId);
         
-        // Eliminate everyone else so they only spectate
         Object.values(room.players).forEach(p => {
-             if (!room.finalists.includes(p.id)) {
+             if (!room.finalists.includes(p.sessionId)) {
                  p.isEliminated = true;
              }
         });
@@ -330,21 +318,18 @@ export function setupGameBackend(httpServer) {
     }
 
     function checkForEndGameOrTie(room) {
-         // Gather remaining alive finalists
-         const alive = Object.values(room.players).filter(p => p.isEliminated === false && room.finalists.includes(p.id));
-         
+         const alive = Object.values(room.players).filter(p => p.isEliminated === false && room.finalists.includes(p.sessionId));
          if (alive.length === 0) {
              room.state = 'END';
              broadcastRoomUpdate(room.id);
              return;
          }
 
-         const maxCredits = Math.max(...alive.map(p => p.credits));
-         const winners = alive.filter(p => p.credits === maxCredits);
+         const maxScore = Math.max(...alive.map(p => p.score));
+         const winners = alive.filter(p => p.score === maxScore);
 
          if (winners.length > 1) {
-             // TIE BREAKER needed
-             room.tiedPlayers = winners.map(w => w.id);
+             room.tiedPlayers = winners.map(w => w.sessionId);
              room.tieBreakerChoices = {};
              room.state = 'TIE_BREAKER';
              broadcastRoomUpdate(room.id);
@@ -357,31 +342,23 @@ export function setupGameBackend(httpServer) {
 
     function resolveTieBreaker(room, io) {
         const p1Id = room.tiedPlayers[0];
-        const p2Id = room.tiedPlayers[1]; // simplified to 2 players normally
-        
+        const p2Id = room.tiedPlayers[1]; 
         const c1 = room.tieBreakerChoices[p1Id];
         const c2 = room.tieBreakerChoices[p2Id];
 
-        // R = rock, P = paper, S = scissors
         let winnerId = null;
         if (c1 === c2) {
-            // Draw, repeat
             room.tieBreakerChoices = {};
             io.to(room.id).emit('tieBreakerDraw');
             return;
         }
 
-        if (
-            (c1 === 'R' && c2 === 'S') ||
-            (c1 === 'P' && c2 === 'R') ||
-            (c1 === 'S' && c2 === 'P')
-        ) {
+        if ((c1 === 'R' && c2 === 'S') || (c1 === 'P' && c2 === 'R') || (c1 === 'S' && c2 === 'P')) {
             winnerId = p1Id;
         } else {
             winnerId = p2Id;
         }
 
-        // Eliminate loser just so there's one supreme winner
         const loserId = winnerId === p1Id ? p2Id : p1Id;
         if (room.players[loserId]) {
             room.players[loserId].isEliminated = true;

@@ -58,3 +58,10 @@ body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif
 
 /* Control del host */
 .host-controls { position: fixed; bottom: 2rem; right: 2rem; display: flex; gap: 1rem; }
+
+/* Habilidades */
+.ability-btn { background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 8px; padding: 0.5rem; font-size: 1rem; color: white; font-weight: bold; flex: 1; cursor: pointer; transition: all 0.2s; }
+.ability-btn:active { transform: scale(0.95); }
+.ability-btn.active-power { background: var(--primary); border-color: var(--primary); color: black; box-shadow: 0 0 10px var(--primary); }
+.ability-btn.consumed { opacity: 0.3; filter: grayscale(1); pointer-events: none; text-decoration: line-through; }
+.mobile-answer-btn.erased { visibility: hidden; pointer-events: none; }

@@ -9,22 +9,37 @@ let currentQuestionData = null;
 let currentRevealData = null;
 let timerLeft = 0;
 let localPlayer = null; 
-let betAmount = 0;
+
+let storedSession = null;
+try { storedSession = JSON.parse(sessionStorage.getItem('gramsci_session')); } catch(e){}
 
 if (!socket) {
     app.innerHTML = '<h1 style="color:white;text-align:center;margin-top:50px;">Error: Servidor no conectado.</h1>';
 } else {
+    if (storedSession && mode === 'player') {
+        socket.emit('rejoinRoom', storedSession, (res) => {
+            if (res.success) {
+                localPlayer = res.player;
+            } else {
+                sessionStorage.removeItem('gramsci_session');
+            }
+        });
+    }
+
     socket.on('roomUpdate', (room) => {
         currentRoom = room;
         if (localPlayer) {
-            localPlayer = room.players[localPlayer.id] || localPlayer;
+            localPlayer = room.players[localPlayer.sessionId] || localPlayer;
+            if (room.state === 'PREPARE_QUESTION') {
+                localPlayer.fiftyFiftyMask = null; // Clear old masks
+            }
         }
         render();
     });
 
     socket.on('questionData', (data) => {
         currentQuestionData = data;
-        currentRevealData = null; // reset
+        currentRevealData = null;
         render();
     });
 
@@ -42,6 +57,7 @@ if (!socket) {
     });
 
     socket.on('roomClosed', () => {
+        sessionStorage.removeItem('gramsci_session');
         alert("La sala ha sido cerrada.");
         window.location.href = '/';
     });
@@ -55,13 +71,11 @@ if (!socket) {
     }
 }
 
-// ------ RENDER DISPATCH ------
 function render() {
     if (mode === 'host') renderHost();
     else renderPlayer();
 }
 
-// ------ HOST VIEWS ------
 function renderHost() {
     if (!currentRoom) {
         app.innerHTML = `<div class="host-container"><h2 class="text-center" style="color:white;margin:auto;">Creando Sala...</h2></div>`;
@@ -69,7 +83,7 @@ function renderHost() {
     }
     switch(currentRoom.state) {
         case 'LOBBY': return hostLobby();
-        case 'BETTING': return hostBetting();
+        case 'PREPARE_QUESTION': return hostPrepare();
         case 'QUESTION': return hostQuestion();
         case 'REVEAL': return hostReveal();
         case 'LEADERBOARD': return hostLeaderboard();
@@ -112,13 +126,13 @@ function hostLobby() {
     `;
 }
 
-function hostBetting() {
+function hostPrepare() {
     if (!currentQuestionData) return;
     app.innerHTML = `
       <div class="host-container slide-up" style="justify-content:center; align-items:center;">
-        <div class="category-badge">Fase ${currentQuestionData.phase}</div>
-        <h1 class="question-title">${currentQuestionData.category}</h1>
-        <p style="color:var(--text-muted); font-size:1.5rem; margin-top:2rem;">Los jugadores están apostando su capital ideológico...</p>
+        <div class="category-badge">${currentQuestionData.category}</div>
+        <h1 class="question-title" style="margin-top:2rem;">${currentQuestionData.text}</h1>
+        <p style="color:var(--text-muted); font-size:2rem; margin-top:2rem;">Prepárense para responder...</p>
         <div class="host-timer" id="host-timer-num">${timerLeft}</div>
       </div>
     `;
@@ -168,12 +182,12 @@ function hostReveal() {
 
 function hostLeaderboard() {
     let playersList = Object.values(currentRoom.players);
-    let topPlayers = [...playersList].sort((a,b) => b.credits - a.credits).slice(0,10);
+    let topPlayers = [...playersList].sort((a,b) => b.score - a.score).slice(0,10);
     
     let groupTops = currentRoom.groups.map(g => {
         let pInGroup = playersList.filter(p => !p.isEliminated && Number(p.groupId) === g.id);
         if (pInGroup.length === 0) return null;
-        return pInGroup.sort((a,b) => b.credits - a.credits)[0];
+        return pInGroup.sort((a,b) => b.score - a.score)[0];
     }).filter(p => p !== null);
 
     const groupColors = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8338ec', '#ff006e'];
@@ -186,7 +200,7 @@ function hostLeaderboard() {
                 <div class="box-glass text-center" style="padding:1rem; border-bottom: 4px solid ${groupColors[(Number(p.groupId)-1)%6]}; min-width: 160px;">
                     <div style="font-size:2.5rem;">${p.avatar}</div>
                     <div style="font-weight:bold; margin:0.5rem 0; font-size: 1.2rem;">${p.name}</div>
-                    <div style="color:var(--text-muted); font-size: 1.1rem;">${p.credits} cr.</div>
+                    <div style="color:var(--text-muted); font-size: 1.1rem;">${p.score} Pts</div>
                 </div>
             `).join('')}
         </div>
@@ -201,7 +215,7 @@ function hostLeaderboard() {
                             ${p.isEliminated ? '<small><i>(Crisis)</i></small>' : ''}
                         </span>
                     </div>
-                    <div style="font-size:1.5rem; font-weight:bold;">${p.credits} cr. ${p.streak > 1 ? ` <span style="color:#d89e00">🔥x${p.streak}</span>` : ''}</div>
+                    <div style="font-size:1.5rem; font-weight:bold;">${p.score} Pts ${p.streak >= 2 ? ` <span style="color:#d89e00">🔥x${p.streak}</span>` : ''}</div>
                 </div>
             `).join('')}
         </div>
@@ -224,7 +238,7 @@ function hostPhase2() {
 
 function hostEnd() {
     let alive = Object.values(currentRoom.players).filter(p => !p.isEliminated);
-    let top = alive.sort((a,b) => b.credits - a.credits)[0];
+    let top = alive.sort((a,b) => b.score - a.score)[0];
 
     app.innerHTML = `
       <div class="host-container slide-up" style="justify-content:center; align-items:center;">
@@ -233,40 +247,38 @@ function hostEnd() {
             <div class="box-glass text-center" style="padding: 4rem; margin-top:2rem; border-color:var(--primary);">
                 <div style="font-size:5rem;">🏆</div>
                 <h1 style="font-size:3rem; margin: 1rem 0;">${top.avatar} ${top.name}</h1>
-                <p style="font-size:1.5rem; color:var(--text-muted);">Consenso logrado con ${top.credits} créditos</p>
+                <p style="font-size:1.5rem; color:var(--text-muted);">Consenso absoluto con ${top.score} Puntos</p>
             </div>
         ` : `
             <div class="box-glass text-center" style="padding: 4rem; margin-top:2rem;">
-                <h1 style="font-size:2rem;">Nadie logró sobrevivir a la Crisis.</h1>
+                <h1 style="font-size:2rem;">Nadie logró evitar la Crisis.</h1>
             </div>
         `}
       </div>
     `;
 }
 
-// ------ HOST CONTROLLERS ------
 window.startGame = () => { socket.emit('startGame', currentRoom.id); }
 window.nextPhase = () => { socket.emit('nextPhase', currentRoom.id); }
 
 
-// ------ MOBILE VIEWS ------
 function renderPlayer() {
     if (!localPlayer) return mobJoin();
     
     if (localPlayer.isEliminated) {
-        app.innerHTML = `<div class="mobile-container"><div class="result-screen lose"><h1>💀 Crisis Absoluta</h1><p>Has sido eliminado del proyecto hegemónico por falta de créditos.</p></div></div>`;
+        app.innerHTML = `<div class="mobile-container"><div class="result-screen lose"><h1>💀 Crisis Absoluta</h1><p>Has sido eliminado de la carrera hegemónica final.</p></div></div>`;
         return;
     }
 
-    if (!currentRoom) return mobJoin();
+    if (!currentRoom) return mobWait("Sincronizando pantalla...");
 
     switch(currentRoom.state) {
         case 'LOBBY': return mobLobby();
-        case 'BETTING': return mobBetting();
+        case 'PREPARE_QUESTION': return mobWait("¡Prepárate! Mira la pantalla del frente...");
         case 'QUESTION': return mobQuestion();
         case 'REVEAL': return mobReveal();
-        case 'LEADERBOARD': return mobWait("Observa la pantalla principal...");
-        case 'PHASE2_TRANSITION': return mobWait("¡Comienza la Final!");
+        case 'LEADERBOARD': return mobWait("Observa los resultados en la pizarra...");
+        case 'PHASE2_TRANSITION': return mobWait("¡Los campeones avanzan a la Final!");
         case 'END': return mobEnd();
         default: return mobJoin();
     }
@@ -312,51 +324,46 @@ function mobWait(msg) {
                 <div style="font-size:3rem; margin-bottom:1rem;">⏳</div>
                 <div>${msg}</div>
             </div>
+            <div style="margin-top:1.5rem; text-align:center; color:var(--primary); font-weight:bold;">
+                 Tu Puntaje: ${localPlayer ? localPlayer.score : 0} Pts
+                 ${localPlayer && localPlayer.streak >= 2 ? `<br><span style="color:#d89e00">🔥 Racha x${localPlayer.streak}</span>` : ''}
+            </div>
         </div>
     `;
 }
 
 function mobLobby() { mobWait("¡Estás dentro!<p>Aguardando confirmación del Host...</p>"); }
 
-function mobBetting() {
-    if (localPlayer.currentBet > 0) return mobWait("Apuesta registrada.");
-
-    app.innerHTML = `
-      <div class="mobile-container slide-up">
-        <h3 class="text-center">Preparación Teórica</h3>
-        <p class="text-center" style="color:var(--text-muted)">Tienes ${localPlayer.credits} créditos.</p>
-        
-        <div class="box-glass p-3" style="text-align:center;">
-            <div>Créditos a Apostar</div>
-            <div class="bet-display" id="bet-value">${Math.max(1, Math.floor(localPlayer.credits * 0.5))}</div>
-            <input type="range" class="credit-slider" id="bet-slider" min="1" max="${localPlayer.credits}" value="${Math.max(1, Math.floor(localPlayer.credits * 0.5))}" oninput="document.getElementById('bet-value').innerText = this.value; betAmount = parseInt(this.value);">
-            
-            <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1rem;">
-                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.25)">25%</button>
-                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.50)">50%</button>
-                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.75)">75%</button>
-                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(1.0)">100%</button>
-            </div>
-
-            <button class="btn-primary mobile-answer-btn color-bet" onclick="submitBet()" style="height:auto; padding:1.5rem; margin-top:1rem;">APOSTAR E IDEOLOGIZAR</button>
-        </div>
-        <div style="text-align:center; font-weight:bold; margin-top:1rem;" id="mob-timer-num">${timerLeft}</div>
-      </div>
-    `;
-    betAmount = parseInt(document.getElementById('bet-slider').value);
-}
-
 function mobQuestion() {
-    if (localPlayer.currentAnswer !== null) return mobWait("Respuesta enviada.");
+    if (localPlayer.currentAnswer !== null) return mobWait("¡Respuesta registrada!<br>Aguardando...");
+
+    // Abilities check
+    const p = localPlayer;
+    let btnProt = \`<button class="ability-btn \${!p.abilities.protector && !p.roundAbilities.protector ? 'consumed' : ''} \${p.roundAbilities.protector ? 'active-power' : ''}" onclick="useAbility('protector')" \${!p.abilities.protector ? 'disabled' : ''}>🛡️ Racha</button>\`;
+    let btnFift = \`<button class="ability-btn \${!p.abilities.fiftyfifty && !p.roundAbilities.fiftyfifty ? 'consumed' : ''} \${p.roundAbilities.fiftyfifty ? 'active-power' : ''}" onclick="useAbility('fiftyfifty')" \${!p.abilities.fiftyfifty ? 'disabled' : ''}>⚖️ 50/50</button>\`;
+    let btnDobl = \`<button class="ability-btn \${!p.abilities.double && !p.roundAbilities.double ? 'consumed' : ''} \${p.roundAbilities.double ? 'active-power' : ''}" onclick="useAbility('double')" \${!p.abilities.double ? 'disabled' : ''}>⚔️ x2</button>\`;
+
+    let m = localPlayer.fiftyFiftyMask || [];
 
     app.innerHTML = `
       <div class="mobile-container">
-        <div style="text-align:center; font-weight:bold; margin-bottom:1rem; font-size:1.5rem;" id="mob-timer-num">${timerLeft}</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; height:80vh;">
-            <button class="mobile-answer-btn color-0" style="height:100%" onclick="submitAnswer(0)"></button>
-            <button class="mobile-answer-btn color-1" style="height:100%" onclick="submitAnswer(1)"></button>
-            <button class="mobile-answer-btn color-2" style="height:100%" onclick="submitAnswer(2)"></button>
-            <button class="mobile-answer-btn color-3" style="height:100%" onclick="submitAnswer(3)"></button>
+        
+        <div style="display:flex; justify-content:space-between; gap:0.5rem; margin-bottom:1rem;">
+            \${btnProt}
+            \${btnFift}
+            \${btnDobl}
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+           <span style="color:var(--primary); font-weight:bold;">\${localPlayer.score} Pts</span>
+           <div style="font-weight:bold; font-size:1.5rem;" id="mob-timer-num">\${timerLeft}</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; height:65vh;">
+            <button class="mobile-answer-btn color-0 \${m.includes(0) ? 'erased' : ''}" onclick="submitAnswer(0)"></button>
+            <button class="mobile-answer-btn color-1 \${m.includes(1) ? 'erased' : ''}" onclick="submitAnswer(1)"></button>
+            <button class="mobile-answer-btn color-2 \${m.includes(2) ? 'erased' : ''}" onclick="submitAnswer(2)"></button>
+            <button class="mobile-answer-btn color-3 \${m.includes(3) ? 'erased' : ''}" onclick="submitAnswer(3)"></button>
         </div>
       </div>
     `;
@@ -365,13 +372,15 @@ function mobQuestion() {
 function mobReveal() {
     if (!currentRevealData) return;
     const correct = currentRevealData.correctIndex === localPlayer.currentAnswer;
+    const isGain = localPlayer.lastScoreChange >= 0;
+
     app.innerHTML = `
         <div class="mobile-container slide-up">
-            <div class="result-screen ${correct ? 'win' : 'lose'}">
-                <h1 style="font-size:3rem; margin-bottom:1rem;">${correct ? '¡Correcto!' : 'Incorrecto'}</h1>
-                <p style="font-size:1.5rem;">${localPlayer.credits} Créditos Restantes</p>
-                <div style="margin-top:2rem; font-size:1.2rem;">
-                    ${correct ? `Ganaste el consenso: +${localPlayer.lastCreditChange}` : `Perdiste legitimidad: ${localPlayer.lastCreditChange}`}
+            <div class="result-screen \${correct ? 'win' : 'lose'}">
+                <h1 style="font-size:3rem; margin-bottom:1rem;">\${correct ? '¡Exacto!' : '¡Error!'}</h1>
+                <p style="font-size:1.5rem;">Total: \${localPlayer.score} Puntos</p>
+                <div style="margin-top:2rem; font-size:1.2rem; background: rgba(0,0,0,0.3); padding:1rem; border-radius:10px;">
+                    \${isGain ? '+' : ''}\${localPlayer.lastScoreChange} Puntos Obtenidos
                 </div>
             </div>
         </div>
@@ -384,14 +393,13 @@ function mobEnd() {
             <div class="status-wait">
                 <div style="font-size:4rem; margin-bottom:1rem;">🏁</div>
                 <div>Fin del Proyecto Hegemónico</div>
-                <p>Observa la pantalla principal para ver al ganador de la Guerra de Posiciones.</p>
+                <p>Observa la pantalla principal para ver al intelectual supremo de la Guerra de Posiciones.</p>
             </div>
         </div>
     `;
 }
 
 
-// ------ MOBILE CONTROLLERS ------
 window.joinRoom = () => {
     const code = document.getElementById('j-code').value.toUpperCase();
     const name = document.getElementById('j-name').value;
@@ -399,9 +407,13 @@ window.joinRoom = () => {
     const group = document.getElementById('j-group').value;
 
     if (!code || !name) return alert("Completa los campos.");
-    socket.emit('joinRoom', { roomId: code, name, avatar, groupId: group }, (res) => {
+    
+    const sessionId = Math.random().toString(36).substr(2, 9);
+
+    socket.emit('joinRoom', { roomId: code, name, avatar, groupId: group, sessionId }, (res) => {
         if (res.success) {
             localPlayer = res.player;
+            sessionStorage.setItem('gramsci_session', JSON.stringify({roomId: code, sessionId: sessionId}));
             render();
         } else {
             alert(res.message);
@@ -409,28 +421,28 @@ window.joinRoom = () => {
     });
 }
 
-window.submitBet = () => {
-    if (!currentRoom || betAmount <= 0 || betAmount > localPlayer.credits) return;
-    socket.emit('placeBet', { roomId: currentRoom.id, bet: betAmount }, (res) => {
-         if (res.success) localPlayer.currentBet = betAmount; render();
-    });
-}
+window.useAbility = (ab) => {
+    if (!currentRoom || localPlayer.currentAnswer !== null) return;
+    if (!localPlayer.abilities[ab]) return;
 
-window.setBetFraction = (frac) => {
-    if (!localPlayer) return;
-    const newBet = Math.max(1, Math.floor(localPlayer.credits * frac));
-    const slider = document.getElementById('bet-slider');
-    const valDisplay = document.getElementById('bet-value');
-    if (slider && valDisplay) {
-        slider.value = newBet;
-        valDisplay.innerText = newBet;
-        betAmount = newBet;
-    }
+    socket.emit('activateAbility', { roomId: currentRoom.id, sessionId: localPlayer.sessionId, abilityName: ab }, (res) => {
+         if (res.success) {
+             localPlayer.abilities[ab] = false;
+             localPlayer.roundAbilities[ab] = true;
+             if (res.disable) {
+                 localPlayer.fiftyFiftyMask = res.disable;
+             }
+             render();
+         }
+    });
 }
 
 window.submitAnswer = (idx) => {
     if (!currentRoom) return;
-    socket.emit('submitAnswer', { roomId: currentRoom.id, answerIndex: idx, timeRemaining: timerLeft }, (res) => {
-         if (res.success) localPlayer.currentAnswer = idx; render();
+    socket.emit('submitAnswer', { roomId: currentRoom.id, sessionId: localPlayer.sessionId, answerIndex: idx, timeRemaining: timerLeft }, (res) => {
+         if (res.success) {
+             localPlayer.currentAnswer = idx; 
+             render();
+         }
     });
 }
