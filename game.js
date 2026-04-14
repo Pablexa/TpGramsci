@@ -105,7 +105,7 @@ function hostLobby() {
         
         <div class="host-controls">
             <button class="btn-primary btn-large" onclick="startGame()" ${playerCount === 0 ? 'disabled' : ''}>
-                INICIAR CLASE MAGISTRAL
+                INICIAR JUEGO
             </button>
         </div>
       </div>
@@ -167,25 +167,45 @@ function hostReveal() {
 }
 
 function hostLeaderboard() {
-    let topPlayers = Object.values(currentRoom.players).sort((a,b) => b.credits - a.credits).slice(0,10);
+    let playersList = Object.values(currentRoom.players);
+    let topPlayers = [...playersList].sort((a,b) => b.credits - a.credits).slice(0,10);
+    
+    let groupTops = currentRoom.groups.map(g => {
+        let pInGroup = playersList.filter(p => !p.isEliminated && Number(p.groupId) === g.id);
+        if (pInGroup.length === 0) return null;
+        return pInGroup.sort((a,b) => b.credits - a.credits)[0];
+    }).filter(p => p !== null);
+
+    const groupColors = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8338ec', '#ff006e'];
     
     app.innerHTML = `
-      <div class="host-container slide-up">
-        <h2 class="section-title text-center">Hegemonía Actual</h2>
+      <div class="host-container slide-up" style="overflow-y:auto; padding: 2rem 0;">
+        <h2 class="section-title text-center" style="margin-bottom:1rem; font-size:2rem;">Líderes de Bloque</h2>
+        <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap; margin-bottom: 2rem; max-width: 1200px; margin-left:auto; margin-right:auto;">
+            ${groupTops.map((p) => `
+                <div class="box-glass text-center" style="padding:1rem; border-bottom: 4px solid ${groupColors[(Number(p.groupId)-1)%6]}; min-width: 160px;">
+                    <div style="font-size:2.5rem;">${p.avatar}</div>
+                    <div style="font-weight:bold; margin:0.5rem 0; font-size: 1.2rem;">${p.name}</div>
+                    <div style="color:var(--text-muted); font-size: 1.1rem;">${p.credits} cr.</div>
+                </div>
+            `).join('')}
+        </div>
+
+        <h2 class="section-title text-center" style="margin-bottom:1rem; font-size:2rem;">Ranking Global</h2>
         <div class="box-glass" style="max-width:800px; margin:0 auto; width:100%; padding:2rem;">
             ${topPlayers.map((p, i) => `
-                <div class="rank-item ${p.isEliminated ? 'eliminated' : ''}">
+                <div class="rank-item ${p.isEliminated ? 'eliminated' : ''}" style="border-left: 6px solid ${groupColors[(Number(p.groupId)-1)%6]}; padding-left: 1rem;">
                     <div style="display:flex; align-items:center; gap:1rem;">
                         <span style="font-size:1.5rem; font-weight:bold; color:var(--primary)">#${i+1}</span>
                         <span style="font-size:1.5rem;">${p.avatar} ${p.name} 
-                            ${p.isEliminated ? '<small><i>(Crisis Absoluta)</i></small>' : ''}
+                            ${p.isEliminated ? '<small><i>(Crisis)</i></small>' : ''}
                         </span>
                     </div>
                     <div style="font-size:1.5rem; font-weight:bold;">${p.credits} cr. ${p.streak > 1 ? ` <span style="color:#d89e00">🔥x${p.streak}</span>` : ''}</div>
                 </div>
             `).join('')}
         </div>
-        <div class="host-controls">
+        <div class="host-controls" style="margin-top:2rem;">
             <button class="btn-primary" onclick="nextPhase()">Siguiente ›</button>
         </div>
       </div>
@@ -260,11 +280,16 @@ function mobJoin() {
             <input type="text" id="j-code" class="mobile-input" placeholder="PIN de la Sala" style="text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:3px;" maxlength="5">
             <input type="text" id="j-name" class="mobile-input" placeholder="Tu Nombre">
             <select id="j-avatar" class="mobile-select">
-                <option value="🦊">🦊 Zorro (Astucia)</option>
-                <option value="🦁">🦁 León (Fuerza)</option>
-                <option value="🦉">🦉 Búho (Intelecto)</option>
-                <option value="🔨">🔨 Martillo (Trabajo)</option>
-                <option value="📚">📚 Libro (Cultura)</option>
+                <option value="🦊">🦊 Zorro</option>
+                <option value="🦁">🦁 León</option>
+                <option value="🦉">🦉 Búho</option>
+                <option value="🔨">🔨 Martillo</option>
+                <option value="📚">📚 Libro</option>
+                <option value="✊">✊ Lucha</option>
+                <option value="🕊️">🕊️ Paz</option>
+                <option value="🎭">🎭 Máscara</option>
+                <option value="🧠">🧠 Intelecto</option>
+                <option value="⚡">⚡ Rayo</option>
             </select>
             <select id="j-group" class="mobile-select">
                 <option value="1">Bloque Histórico</option>
@@ -305,6 +330,14 @@ function mobBetting() {
             <div>Créditos a Apostar</div>
             <div class="bet-display" id="bet-value">${Math.max(1, Math.floor(localPlayer.credits * 0.5))}</div>
             <input type="range" class="credit-slider" id="bet-slider" min="1" max="${localPlayer.credits}" value="${Math.max(1, Math.floor(localPlayer.credits * 0.5))}" oninput="document.getElementById('bet-value').innerText = this.value; betAmount = parseInt(this.value);">
+            
+            <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1rem;">
+                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.25)">25%</button>
+                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.50)">50%</button>
+                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(0.75)">75%</button>
+                <button class="btn-primary" style="padding:0.5rem; flex:1; font-size:1rem;" onclick="setBetFraction(1.0)">100%</button>
+            </div>
+
             <button class="btn-primary mobile-answer-btn color-bet" onclick="submitBet()" style="height:auto; padding:1.5rem; margin-top:1rem;">APOSTAR E IDEOLOGIZAR</button>
         </div>
         <div style="text-align:center; font-weight:bold; margin-top:1rem;" id="mob-timer-num">${timerLeft}</div>
@@ -381,6 +414,18 @@ window.submitBet = () => {
     socket.emit('placeBet', { roomId: currentRoom.id, bet: betAmount }, (res) => {
          if (res.success) localPlayer.currentBet = betAmount; render();
     });
+}
+
+window.setBetFraction = (frac) => {
+    if (!localPlayer) return;
+    const newBet = Math.max(1, Math.floor(localPlayer.credits * frac));
+    const slider = document.getElementById('bet-slider');
+    const valDisplay = document.getElementById('bet-value');
+    if (slider && valDisplay) {
+        slider.value = newBet;
+        valDisplay.innerText = newBet;
+        betAmount = newBet;
+    }
 }
 
 window.submitAnswer = (idx) => {

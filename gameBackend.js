@@ -138,7 +138,8 @@ export function setupGameBackend(httpServer) {
         const player = room.players[socket.id];
         if (player && !player.isEliminated && player.currentAnswer === null) {
             player.currentAnswer = answerIndex;
-            player.timeTaken = 25 - timeRemaining; // assuming 25 is max
+            const qTime = room.questions[room.currentQuestion]?.timeLimit || 25;
+            player.timeTaken = qTime - timeRemaining; 
             callback({ success: true });
             io.to(room.hostId).emit('playerAction', { event: 'answered', id: socket.id });
         }
@@ -239,7 +240,7 @@ export function setupGameBackend(httpServer) {
                 text: q.texto, category: q.categoria, phase: q.fase, options: q.opciones
             });
 
-            startTimer(room, 25, () => {
+            startTimer(room, q.timeLimit || 25, () => {
                 // Time up, go to Reveal
                 resolveQuestion(room);
             });

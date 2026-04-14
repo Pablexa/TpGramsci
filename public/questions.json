@@ -1,100 +1,102 @@
 [
-  {
-    "id": 1,
-    "fase": 1,
-    "categoria": "Hechos Históricos",
-    "texto": "¿En qué año se fundó el Partido Comunista de Italia, en el cual Gramsci participó clavemente?",
-    "opciones": [
-      "1914",
-      "1921",
-      "1926",
-      "1937"
-    ],
-    "correcta": 1,
-    "explicacion": "El PCI se fundó en enero de 1921 tras la escisión del Partido Socialista Italiano en el congreso de Livorno."
-  },
-  {
-    "id": 2,
-    "fase": 1,
-    "categoria": "Poder y Sociedad",
-    "texto": "Según Gramsci, la 'sociedad política' se basa principalmente en...",
-    "opciones": [
-      "El consenso y las alianzas pacíficas",
-      "Las escuelas y los medios de comunicación",
-      "La dominación mediante el uso de la fuerza pública",
-      "El intercambio infinito de mercancías"
-    ],
-    "correcta": 2,
-    "explicacion": "La sociedad política es el Estado estricto o aparato coercitivo (policía, ejército, leyes)."
-  },
-  {
-    "id": 3,
-    "fase": 1,
-    "categoria": "Estrategias de Poder",
-    "texto": "Para construir la contrahegemonía en el occidente moderno, Gramsci propuso la estrategia de...",
-    "opciones": [
-      "Guerra de Posiciones",
-      "Guerra de Movimientos",
-      "Revolución Espontánea",
-      "Levantamiento Armado Fijo"
-    ],
-    "correcta": 0,
-    "explicacion": "La guerra de posiciones implica una lucha cultural paciente por ocupar las instituciones y transformar la mentalidad común de la gente, al contrario de un asalto rápido."
-  },
-  {
-    "id": 4,
-    "fase": 1,
-    "categoria": "Terminología",
-    "texto": "¿Cómo denominó Gramsci al fenómeno en el cual las clases altas ceden algunos cambios superficiales para evitar rendir su poder total?",
-    "opciones": [
-      "Subalternidad estructural",
-      "Modernidad conservadora",
-      "Lucha de posiciones",
-      "Revolución pasiva"
-    ],
-    "correcta": 3,
-    "explicacion": "La Revolución pasiva es una maniobra donde el poder realiza pequeñas 'reformas desde arriba' solo para aplacar la sed de cambio real."
-  },
-  {
-    "id": 5,
-    "fase": 1,
-    "categoria": "Cultura y Consenso",
-    "texto": "¿Qué rol juegan los intelectuales orgánicos para los grupos explotados?",
-    "opciones": [
-      "Imponer sus ideas por la fuerza armada",
-      "Mantener un estado imparcial, frío y académico en la política",
-      "Construir conciencia, organizar y dar sentido al reclamo de la clase",
-      "Esconder la crisis tras mentiras ideológicas"
-    ],
-    "correcta": 2,
-    "explicacion": "Los orgánicos no son figuras aisladas; están fuertemente enraizados con los problemas de una clase social y ayudan a organizarla y defenderla intelectualmente."
-  },
-  {
-    "id": 6,
-    "fase": 2,
-    "categoria": "FINAL",
-    "texto": "Para cambiar la sociedad italiana, ¿Qué gran alianza concebía vital un Bloque Histórico según Gramsci?",
-    "opciones": [
-      "El Ejército con el Clero",
-      "Obreros del norte con campesinos del sur",
-      "Burgueses extranjeros con intelectuales",
-      "Maestros con la aristocracia urbana"
-    ],
-    "correcta": 1,
-    "explicacion": "El bloque histórico buscaba suturar la fractura clave de Italia, juntando al motor industrial (proletariado norte) con la aplastante base oprimida agrícola (sur)."
-  },
-  {
-    "id": 7,
-    "fase": 2,
-    "categoria": "FINAL",
-    "texto": "Finalmente, para la Hegemonía, la Ideología NO es una mentira, sino que es...",
-    "opciones": [
-      "Un relato que sólo durará un par de años",
-      "La fuerza económica de las multinacionales",
-      "Una ilusión para estafar el dinero de los bancos",
-      "El marco de valores y sentido común que consideramos normal"
-    ],
-    "correcta": 3,
-    "explicacion": "La Ideología es tan profunda que naturaliza injusticias de manera pacífica mediante creencias instauradas culturalmente durante generaciones."
-  }
-]
+    {
+      "id": 1,
+      "fase": 1,
+      "categoria": "Persona 1 | Vida",
+      "texto": "¿En qué región de Italia (conocida por ser en ese momento muy pobre) nació Antonio Gramsci en 1891?",
+      "opciones": ["Turín", "Milán", "Cerdeña", "Roma"],
+      "correcta": 2,
+      "timeLimit": 12,
+      "explicacion": "Tal como dijo la Persona 1, Gramsci nació en Cerdeña, y la dura desigualdad económica de esa región condicionó para siempre su visión política sobre el mundo."
+    },
+    {
+      "id": 2,
+      "fase": 1,
+      "categoria": "Persona 1 | Prisión",
+      "texto": "¿Qué líder fascista italiano llega al poder y ordena arrestar a Gramsci en 1926?",
+      "opciones": ["Hitler", "Benito Mussolini", "Mazzini", "Garibaldi"],
+      "correcta": 1,
+      "timeLimit": 10,
+      "explicacion": "Mussolini consolidó su dictadura con brutalidad fascista, y tras temer la inteligencia de Gramsci, mandó a encerrarlo en la prisión donde se enfermaría gravemente."
+    },
+    {
+      "id": 3,
+      "fase": 1,
+      "categoria": "Persona 1 | Obra Cumbre",
+      "texto": "¿Cómo se llama el famosísimo libro que Gramsci escribió soportando terribles condiciones dentro de su encierro?",
+      "opciones": ["El Capital", "Cuadernos de la cárcel", "Cartas comunistas", "Revolución Pasiva"],
+      "correcta": 1,
+      "timeLimit": 12,
+      "explicacion": "Los 'Cuadernos de la cárcel' fueron su obra cúspide, donde condensó desde las sombras todo su pensamiento que cambiaría al mundo tras su desgraciada muerte."
+    },
+    {
+      "id": 4,
+      "fase": 1,
+      "categoria": "Persona 2 | Hegemonía",
+      "texto": "Según explicó la Persona 2, ¿Cómo se llama al proceso de dominar a las personas no por la fuerza armada, sino logrando que acepten sus ideas como normales y naturales?",
+      "opciones": ["Autoritarismo", "Oligarquía", "Hegemonía", "Violencia Cultural"],
+      "correcta": 2,
+      "timeLimit": 20,
+      "explicacion": "La Hegemonía es el concepto maestro de Gramsci. Muestra que la gente aprueba y defiende a las clases ricas porque el sistema las convenció de que esa dominancia es natural."
+    },
+    {
+      "id": 5,
+      "fase": 1,
+      "categoria": "Persona 2 | Sociedad Civil",
+      "texto": "¿A qué ámbito dice Gramsci que pertenecen las Escuelas, las Iglesias y los Medios de Comunicación donde creamos consenso?",
+      "opciones": ["Sociedad Política", "Sociedad Privada", "Sociedad Común", "Sociedad Civil"],
+      "correcta": 3,
+      "timeLimit": 15,
+      "explicacion": "A diferencia del Estado y las armas de fuego (que son la 'Sociedad Política'), la 'Sociedad Civil' aglomera a las redes de instituciones humanas cotidianas como la escuela."
+    },
+    {
+      "id": 6,
+      "fase": 1,
+      "categoria": "Persona 2 | Ideología",
+      "texto": "¿Verdadero o Falso? Para Gramsci, la Ideología es simplemente una gran MENTIRA inventada por los políticos para engañar.",
+      "opciones": ["Cierto, es una pantalla falsa.", "Cierto, se usa para saquear al país.", "Falso, es conjunto de creencias morales.", "Falso, Gramsci odiaba la Ideología."],
+      "correcta": 2,
+      "timeLimit": 18,
+      "explicacion": "Gramsci remarca que la Ideología no es simple mentira. Es el conjunto vital de creencias y formas de asimilar la realidad que adopta orgánicamente el ser humano."
+    },
+    {
+      "id": 7,
+      "fase": 1,
+      "categoria": "Persona 3 | Acción Práctica",
+      "texto": "Si Hegemonía es dominar el pensamiento general, ¿Cómo se le llama a organizarse activamente para proponer ideas de un MUNDO NUEVO y destronarlos?",
+      "opciones": ["Superhegemonía", "Resistencia Inversa", "Golpe de Estado", "Contrahegemonía"],
+      "correcta": 3,
+      "timeLimit": 18,
+      "explicacion": "Un rebelde sin rumbo no sirve. Para vencer hay que montar una firme 'Contrahegemonía', creando instituciones genuinas e ilustradas frente a los poderosos."
+    },
+    {
+      "id": 8,
+      "fase": 2,
+      "categoria": "Persona 3 | Intelectualidad",
+      "texto": "¿Cómo le decimos a toda persona común (sin importar si es maestro u obrero) que ayuda a darle rumbo e ideas claras a un grupo social subalterno?",
+      "opciones": ["Intelectual Orgánico", "Profesor Marxista", "Dirigente Obrero", "Iluminado"],
+      "correcta": 0,
+      "timeLimit": 18,
+      "explicacion": "Toda clase produce Intelectuales Orgánicos; los suyos; individuos que nacen de sus entrañas y organizan activamente las estrategias directrices del grupo para no ser borregos."
+    },
+    {
+      "id": 9,
+      "fase": 2,
+      "categoria": "Persona 3 | Concepto Clave",
+      "texto": "Si el norte industrial y el sur campesino de Italia se hubiesen unido firmemente para pelear en busca de un mismo proyecto, hubiesen sido un...",
+      "opciones": ["Bloque Armado", "Bloque Histórico", "Estado Moderno", "Sindicato Universal"],
+      "correcta": 1,
+      "timeLimit": 20,
+      "explicacion": "Esa unión poderosa de clases en torno a un sentido e ideal común se estandariza como el 'Bloque Histórico', fundamental para poder ganar poder real popular."
+    },
+    {
+      "id": 10,
+      "fase": 2,
+      "categoria": "Persona 3 | Engaños del Poder",
+      "texto": "¿Cómo define Gramsci el acto donde los ricos hacen reformas legales y 'buenas' desde arriba solo para calmar las protestas y que el sistema siga igual de roto?",
+      "opciones": ["Revolución Pasiva", "Falso Socialismo", "Traición Hegemónica", "Revolución Burguesa"],
+      "correcta": 0,
+      "timeLimit": 18,
+      "explicacion": "Ese engaño estratégico se llama 'Revolución Pasiva'. Sirve a las élites para neutralizar protestas dándoles migajas legales a los pobres, para que nada cambie realmente."
+    }
+  ]
