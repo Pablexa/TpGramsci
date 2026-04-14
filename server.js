@@ -24,7 +24,7 @@ app.get('/jugar/', (req, res) => {
 });
 
 // Any other route fallbacks to index.html
-app.get('*', (req, res) => {
+app.use((req, res) => {
     if (fs.existsSync(path.join(distPath, 'index.html'))) {
         res.sendFile(path.join(distPath, 'index.html'));
     } else {
