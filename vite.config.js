@@ -2,6 +2,14 @@ import { defineConfig } from 'vite';
 import { setupGameBackend } from './gameBackend.js';
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        game: 'game.html'
+      }
+    }
+  },
   plugins: [
     {
       name: 'socket-io',
