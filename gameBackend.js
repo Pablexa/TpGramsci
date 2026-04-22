@@ -51,7 +51,8 @@ export function setupGameBackend(httpServer) {
             finalists: [],
             isFinalPhase: false,
             tiedPlayers: [],
-            tieBreakerChoices: {} 
+            tieBreakerChoices: {},
+            currentQuestionData: null  // store for rejoin
         };
         rooms.set(roomId, room);
         socket.join(roomId);
@@ -113,9 +114,24 @@ export function setupGameBackend(httpServer) {
         if (!roomId || !sessionId) return callback({success: false});
         const room = rooms.get(roomId.toUpperCase());
         if(room && room.players[sessionId]) {
+            // Update socket id for this player
             room.players[sessionId].id = socket.id; 
             socket.join(roomId.toUpperCase());
-            callback({ success: true, player: room.players[sessionId], roomState: room.state });
+            
+            // Send current state back to reconnecting player
+            const response = { 
+                success: true, 
+                player: room.players[sessionId], 
+                roomState: room.state 
+            };
+            callback(response);
+            
+            // Re-send current question data if mid-game
+            if (room.currentQuestionData) {
+                socket.emit('questionData', room.currentQuestionData);
+            }
+            // Re-send room update so player syncs
+            broadcastRoomUpdate(roomId.toUpperCase());
         } else {
             callback({ success: false });
         }
@@ -124,7 +140,7 @@ export function setupGameBackend(httpServer) {
     socket.on('submitAnswer', (data, callback) => {
         const { roomId, sessionId, answerIndex, timeRemaining } = data;
         const room = rooms.get(roomId);
-        if (!room || room.state !== 'QUESTION') return;
+        if (!room || room.state !== 'QUESTION') return callback({ success: false });
 
         const player = room.players[sessionId];
         if (player && !player.isEliminated && player.currentAnswer === null) {
@@ -133,13 +149,15 @@ export function setupGameBackend(httpServer) {
             player.timeTaken = qTime - timeRemaining; 
             callback({ success: true });
             io.to(room.hostId).emit('playerAction', { event: 'answered', id: player.id });
+        } else {
+            callback({ success: false });
         }
     });
 
     socket.on('activateAbility', (data, callback) => {
         const { roomId, sessionId, abilityName } = data;
         const room = rooms.get(roomId);
-        if(!room || room.state !== 'QUESTION') return;
+        if(!room || room.state !== 'QUESTION') return callback({ success: false });
 
         const p = room.players[sessionId];
         if (p && p.abilities[abilityName] && p.currentAnswer === null) {
@@ -154,15 +172,19 @@ export function setupGameBackend(httpServer) {
             } else {
                 callback({ success: true });
             }
+        } else {
+            callback({ success: false });
         }
     });
 
     socket.on('disconnect', () => {
         rooms.forEach((room, roomId) => {
             if (room.hostId === socket.id) {
+                clearInterval(room.timerInterval);
                 io.to(roomId).emit('roomClosed');
                 rooms.delete(roomId);
             }
+            // Don't remove players on disconnect — they may rejoin
         });
     });
 
@@ -172,7 +194,8 @@ export function setupGameBackend(httpServer) {
         const safeRoom = {
             ...room,
             questions: null,
-            timerInterval: null
+            timerInterval: null,
+            currentQuestionData: null  // don't leak to broadcast
         };
         io.to(roomId).emit('roomUpdate', safeRoom);
     }
@@ -207,17 +230,24 @@ export function setupGameBackend(httpServer) {
             p.roundAbilities = {};
         });
 
-        broadcastRoomUpdate(room.id);
-        io.to(room.id).emit('questionData', { 
+        // Store question data for rejoins (no options yet)
+        room.currentQuestionData = { 
             text: q.texto, category: q.categoria, phase: q.fase 
-        });
+        };
+
+        broadcastRoomUpdate(room.id);
+        io.to(room.id).emit('questionData', room.currentQuestionData);
 
         startTimer(room, 5, () => {
             room.state = 'QUESTION';
-            broadcastRoomUpdate(room.id);
-            io.to(room.id).emit('questionData', {
+            
+            // Now include options
+            room.currentQuestionData = {
                 text: q.texto, category: q.categoria, phase: q.fase, options: q.opciones
-            });
+            };
+            
+            broadcastRoomUpdate(room.id);
+            io.to(room.id).emit('questionData', room.currentQuestionData);
 
             startTimer(room, q.timeLimit || 15, () => {
                 resolveQuestion(room);
@@ -227,6 +257,7 @@ export function setupGameBackend(httpServer) {
 
     function resolveQuestion(room) {
         room.state = 'REVEAL';
+        clearInterval(room.timerInterval);  // ensure timer is stopped
         const q = room.questions[room.currentQuestion];
         
         Object.values(room.players).forEach(p => {
@@ -236,6 +267,7 @@ export function setupGameBackend(httpServer) {
             const double = p.roundAbilities.double ? 2 : 1;
 
             if (p.currentAnswer === q.correcta) {
+                // Correct answer
                 let pointsBase = 100 - (Math.floor(p.timeTaken) * 3);
                 let safePoints = Math.max(25, pointsBase);
                 let gain = (safePoints * double) + (p.streak * 10);
@@ -244,16 +276,21 @@ export function setupGameBackend(httpServer) {
                 p.lastScoreChange = gain;
                 p.streak += 1;
             } else {
+                // Wrong answer or AFK
                 let penalty = (-50) * double;
                 
-                // penalización suave si estuvo AFK
-                if (p.currentAnswer === null) penalty = -25;
-                
-                // Protector de racha
-                if (p.roundAbilities.protector && p.currentAnswer !== null) {
-                    penalty = 0; 
-                } else {
-                    p.streak = 0; 
+                // Softer penalty if AFK (didn't answer at all)
+                if (p.currentAnswer === null) {
+                    penalty = -25;
+                    p.streak = 0;
+                }
+                // Protector de racha: blocks penalty AND preserves streak
+                else if (p.roundAbilities.protector) {
+                    penalty = 0;
+                    // streak is preserved — that's the whole point
+                }
+                else {
+                    p.streak = 0;
                 }
 
                 p.score += penalty;
@@ -284,7 +321,9 @@ export function setupGameBackend(httpServer) {
                     goToNextQuestion(room);
                 }
             } else {
-                 checkForEndGameOrTie(room);
+                // All questions done
+                room.state = 'END';
+                broadcastRoomUpdate(room.id);
             }
         }
     }
@@ -293,7 +332,7 @@ export function setupGameBackend(httpServer) {
         room.isFinalPhase = true;
         const finalists = [];
         room.groups.forEach(g => {
-             const groupPlayers = Object.values(room.players).filter(p => p.groupId === g.id && !p.isEliminated);
+             const groupPlayers = Object.values(room.players).filter(p => Number(p.groupId) === g.id && !p.isEliminated);
              if (groupPlayers.length > 0) {
                  const maxScore = Math.max(...groupPlayers.map(p => p.score));
                  const tops = groupPlayers.filter(p => p.score === maxScore);
@@ -303,11 +342,16 @@ export function setupGameBackend(httpServer) {
 
         room.finalists = finalists.map(f => f.sessionId);
         
-        Object.values(room.players).forEach(p => {
-             if (!room.finalists.includes(p.sessionId)) {
-                 p.isEliminated = true;
-             }
-        });
+        // If somehow no finalists (e.g., all at 0), keep everyone alive
+        if (room.finalists.length === 0) {
+            room.finalists = Object.keys(room.players);
+        } else {
+            Object.values(room.players).forEach(p => {
+                 if (!room.finalists.includes(p.sessionId)) {
+                     p.isEliminated = true;
+                 }
+            });
+        }
 
         room.state = 'PHASE2_TRANSITION';
         broadcastRoomUpdate(room.id);
@@ -315,57 +359,6 @@ export function setupGameBackend(httpServer) {
         setTimeout(() => {
              goToNextQuestion(room);
         }, 8000);
-    }
-
-    function checkForEndGameOrTie(room) {
-         const alive = Object.values(room.players).filter(p => p.isEliminated === false && room.finalists.includes(p.sessionId));
-         if (alive.length === 0) {
-             room.state = 'END';
-             broadcastRoomUpdate(room.id);
-             return;
-         }
-
-         const maxScore = Math.max(...alive.map(p => p.score));
-         const winners = alive.filter(p => p.score === maxScore);
-
-         if (winners.length > 1) {
-             room.tiedPlayers = winners.map(w => w.sessionId);
-             room.tieBreakerChoices = {};
-             room.state = 'TIE_BREAKER';
-             broadcastRoomUpdate(room.id);
-             io.to(room.id).emit('startTieBreaker');
-         } else {
-             room.state = 'END';
-             broadcastRoomUpdate(room.id);
-         }
-    }
-
-    function resolveTieBreaker(room, io) {
-        const p1Id = room.tiedPlayers[0];
-        const p2Id = room.tiedPlayers[1]; 
-        const c1 = room.tieBreakerChoices[p1Id];
-        const c2 = room.tieBreakerChoices[p2Id];
-
-        let winnerId = null;
-        if (c1 === c2) {
-            room.tieBreakerChoices = {};
-            io.to(room.id).emit('tieBreakerDraw');
-            return;
-        }
-
-        if ((c1 === 'R' && c2 === 'S') || (c1 === 'P' && c2 === 'R') || (c1 === 'S' && c2 === 'P')) {
-            winnerId = p1Id;
-        } else {
-            winnerId = p2Id;
-        }
-
-        const loserId = winnerId === p1Id ? p2Id : p1Id;
-        if (room.players[loserId]) {
-            room.players[loserId].isEliminated = true;
-        }
-
-        room.state = 'END';
-        broadcastRoomUpdate(room.id);
     }
 
   });

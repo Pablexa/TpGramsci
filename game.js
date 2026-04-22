@@ -20,18 +20,27 @@ if (!socket) {
         socket.emit('rejoinRoom', storedSession, (res) => {
             if (res.success) {
                 localPlayer = res.player;
+                render();
             } else {
                 sessionStorage.removeItem('gramsci_session');
+                render();
             }
         });
     }
 
     socket.on('roomUpdate', (room) => {
         currentRoom = room;
-        if (localPlayer) {
-            localPlayer = room.players[localPlayer.sessionId] || localPlayer;
-            if (room.state === 'PREPARE_QUESTION') {
-                localPlayer.fiftyFiftyMask = null; // Clear old masks
+        if (localPlayer && room.players) {
+            const updated = room.players[localPlayer.sessionId];
+            if (updated) {
+                // Preserve local-only fields
+                const savedMask = localPlayer.fiftyFiftyMask;
+                localPlayer = updated;
+                if (room.state !== 'PREPARE_QUESTION') {
+                    localPlayer.fiftyFiftyMask = savedMask;
+                } else {
+                    localPlayer.fiftyFiftyMask = null;
+                }
             }
         }
         render();
@@ -64,6 +73,9 @@ if (!socket) {
 
     if (mode === 'host') {
         socket.emit('createRoom', {}, (res) => {
+            if (res.success) {
+                // Room created, wait for roomUpdate
+            }
             render();
         });
     } else {
@@ -128,9 +140,10 @@ function hostLobby() {
 
 function hostPrepare() {
     if (!currentQuestionData) return;
+    const qNum = (currentRoom ? currentRoom.currentQuestion + 1 : '?');
     app.innerHTML = `
       <div class="host-container slide-up" style="justify-content:center; align-items:center;">
-        <div class="category-badge">${currentQuestionData.category}</div>
+        <div class="category-badge">Pregunta ${qNum} — ${currentQuestionData.category}</div>
         <h1 class="question-title" style="margin-top:2rem;">${currentQuestionData.text}</h1>
         <p style="color:var(--text-muted); font-size:2rem; margin-top:2rem;">Prepárense para responder...</p>
         <div class="host-timer" id="host-timer-num">${timerLeft}</div>
@@ -156,11 +169,17 @@ function hostQuestion() {
 
 function hostReveal() {
     if (!currentQuestionData || !currentRevealData) return;
+    
+    // Count how many got it right vs wrong
+    const players = currentRoom ? Object.values(currentRoom.players).filter(p => !p.isEliminated) : [];
+    const correctCount = players.filter(p => p.currentAnswer === currentRevealData.correctIndex).length;
+    const totalAnswered = players.filter(p => p.currentAnswer !== null).length;
+    
     app.innerHTML = `
       <div class="host-container slide-up">
         <h1 class="question-title">${currentQuestionData.text}</h1>
-        <div style="text-align:center; margin-bottom: 2rem;">
-            <div class="badge speaker-badge">Opción Correcta</div>
+        <div style="text-align:center; margin-bottom: 1rem;">
+            <div class="badge speaker-badge">✅ ${correctCount}/${totalAnswered} acertaron</div>
         </div>
         <div class="answer-grid">
             ${currentQuestionData.options.map((opt, i) => `
@@ -169,9 +188,16 @@ function hostReveal() {
                 </div>
             `).join('')}
         </div>
-        <div class="box-glass p-3" style="max-width:1000px; margin: 0 auto; text-align:center;">
-            <h3>Explicación Teórica</h3>
+        <div class="box-glass p-3 explain-box" style="max-width:1000px; margin: 0 auto; text-align:center; cursor:pointer;" onclick="expandExplanation()">
+            <h3>Explicación Teórica <span style="font-size:0.8rem; color:var(--text-muted);">(click para expandir)</span></h3>
             <p>${currentRevealData.explicacion}</p>
+        </div>
+        <div id="explain-overlay" class="explain-overlay hidden" onclick="closeExplanation(event)">
+            <div class="explain-modal" onclick="event.stopPropagation()">
+                <button class="explain-close" onclick="closeExplanation(event)">✕</button>
+                <h2 style="color:var(--primary); margin-bottom:1.5rem;">Explicación Teórica</h2>
+                <p style="font-size:1.4rem; line-height:1.8;">${currentRevealData.explicacion}</p>
+            </div>
         </div>
         <div class="host-controls">
             <button class="btn-primary" onclick="nextPhase()">Siguiente ›</button>
@@ -212,7 +238,7 @@ function hostLeaderboard() {
                     <div style="display:flex; align-items:center; gap:1rem;">
                         <span style="font-size:1.5rem; font-weight:bold; color:var(--primary)">#${i+1}</span>
                         <span style="font-size:1.5rem;">${p.avatar} ${p.name} 
-                            ${p.isEliminated ? '<small><i>(Crisis)</i></small>' : ''}
+                            ${p.isEliminated ? '<small><i>(Eliminado)</i></small>' : ''}
                         </span>
                     </div>
                     <div style="font-size:1.5rem; font-weight:bold;">${p.score} Pts ${p.streak >= 2 ? ` <span style="color:#d89e00">🔥x${p.streak}</span>` : ''}</div>
@@ -237,18 +263,35 @@ function hostPhase2() {
 }
 
 function hostEnd() {
-    let alive = Object.values(currentRoom.players).filter(p => !p.isEliminated);
-    let top = alive.sort((a,b) => b.score - a.score)[0];
+    let allPlayers = Object.values(currentRoom.players);
+    // If there was a final phase, show finalists ranking; otherwise show everyone
+    let candidates = allPlayers.filter(p => !p.isEliminated);
+    if (candidates.length === 0) candidates = allPlayers; // fallback
+    let top = candidates.sort((a,b) => b.score - a.score)[0];
+
+    // Top 3 podium
+    let podium = [...candidates].sort((a,b) => b.score - a.score).slice(0, 3);
 
     app.innerHTML = `
       <div class="host-container slide-up" style="justify-content:center; align-items:center;">
         <h2 class="section-title">La Disputa por la Hegemonía ha finalizado</h2>
         ${top ? `
-            <div class="box-glass text-center" style="padding: 4rem; margin-top:2rem; border-color:var(--primary);">
+            <div class="box-glass text-center" style="padding: 3rem; margin-top:2rem; border-color:var(--primary);">
                 <div style="font-size:5rem;">🏆</div>
                 <h1 style="font-size:3rem; margin: 1rem 0;">${top.avatar} ${top.name}</h1>
                 <p style="font-size:1.5rem; color:var(--text-muted);">Consenso absoluto con ${top.score} Puntos</p>
             </div>
+            ${podium.length > 1 ? `
+            <div style="display:flex; gap:1rem; margin-top:2rem; justify-content:center; flex-wrap:wrap;">
+                ${podium.map((p, i) => `
+                    <div class="box-glass text-center" style="padding:1.5rem; min-width:150px;">
+                        <div style="font-size:2rem;">${['🥇','🥈','🥉'][i]}</div>
+                        <div style="font-weight:bold; margin:0.5rem 0;">${p.avatar} ${p.name}</div>
+                        <div style="color:var(--text-muted);">${p.score} Pts</div>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
         ` : `
             <div class="box-glass text-center" style="padding: 4rem; margin-top:2rem;">
                 <h1 style="font-size:2rem;">Nadie logró evitar la Crisis.</h1>
@@ -261,12 +304,22 @@ function hostEnd() {
 window.startGame = () => { socket.emit('startGame', currentRoom.id); }
 window.nextPhase = () => { socket.emit('nextPhase', currentRoom.id); }
 
+window.expandExplanation = () => {
+    const overlay = document.getElementById('explain-overlay');
+    if (overlay) overlay.classList.remove('hidden');
+}
+window.closeExplanation = (e) => {
+    e.stopPropagation();
+    const overlay = document.getElementById('explain-overlay');
+    if (overlay) overlay.classList.add('hidden');
+}
+
 
 function renderPlayer() {
     if (!localPlayer) return mobJoin();
     
-    if (localPlayer.isEliminated) {
-        app.innerHTML = `<div class="mobile-container"><div class="result-screen lose"><h1>💀 Crisis Absoluta</h1><p>Has sido eliminado de la carrera hegemónica final.</p></div></div>`;
+    if (localPlayer.isEliminated && currentRoom && currentRoom.state !== 'END') {
+        app.innerHTML = `<div class="mobile-container"><div class="result-screen lose"><h1>💀 Crisis Absoluta</h1><p>Has sido eliminado de la carrera hegemónica final.</p><p style="margin-top:1rem; color:var(--text-muted);">Observa la pantalla principal.</p></div></div>`;
         return;
     }
 
@@ -277,7 +330,7 @@ function renderPlayer() {
         case 'PREPARE_QUESTION': return mobWait("¡Prepárate! Mira la pantalla del frente...");
         case 'QUESTION': return mobQuestion();
         case 'REVEAL': return mobReveal();
-        case 'LEADERBOARD': return mobWait("Observa los resultados en la pizarra...");
+        case 'LEADERBOARD': return mobLeaderboard();
         case 'PHASE2_TRANSITION': return mobWait("¡Los campeones avanzan a la Final!");
         case 'END': return mobEnd();
         default: return mobJoin();
@@ -290,7 +343,7 @@ function mobJoin() {
         <div class="mobile-form box-glass p-3">
             <h2 class="text-center" style="color:var(--primary)">Unirse al Juego</h2>
             <input type="text" id="j-code" class="mobile-input" placeholder="PIN de la Sala" style="text-transform:uppercase; text-align:center; font-weight:bold; letter-spacing:3px;" maxlength="5">
-            <input type="text" id="j-name" class="mobile-input" placeholder="Tu Nombre">
+            <input type="text" id="j-name" class="mobile-input" placeholder="Tu Nombre" maxlength="15">
             <select id="j-avatar" class="mobile-select">
                 <option value="🦊">🦊 Zorro</option>
                 <option value="🦁">🦁 León</option>
@@ -335,13 +388,21 @@ function mobWait(msg) {
 function mobLobby() { mobWait("¡Estás dentro!<p>Aguardando confirmación del Host...</p>"); }
 
 function mobQuestion() {
+    if (!localPlayer) return;
     if (localPlayer.currentAnswer !== null) return mobWait("¡Respuesta registrada!<br>Aguardando...");
 
     // Abilities check
     const p = localPlayer;
-    let btnProt = `<button class="ability-btn ${!p.abilities.protector && !p.roundAbilities.protector ? 'consumed' : ''} ${p.roundAbilities.protector ? 'active-power' : ''}" onclick="useAbility('protector')" ${!p.abilities.protector ? 'disabled' : ''}>🛡️ Racha</button>`;
-    let btnFift = `<button class="ability-btn ${!p.abilities.fiftyfifty && !p.roundAbilities.fiftyfifty ? 'consumed' : ''} ${p.roundAbilities.fiftyfifty ? 'active-power' : ''}" onclick="useAbility('fiftyfifty')" ${!p.abilities.fiftyfifty ? 'disabled' : ''}>⚖️ 50/50</button>`;
-    let btnDobl = `<button class="ability-btn ${!p.abilities.double && !p.roundAbilities.double ? 'consumed' : ''} ${p.roundAbilities.double ? 'active-power' : ''}" onclick="useAbility('double')" ${!p.abilities.double ? 'disabled' : ''}>⚔️ x2</button>`;
+    const abProt = p.abilities && p.abilities.protector;
+    const abFift = p.abilities && p.abilities.fiftyfifty;
+    const abDobl = p.abilities && p.abilities.double;
+    const raProt = p.roundAbilities && p.roundAbilities.protector;
+    const raFift = p.roundAbilities && p.roundAbilities.fiftyfifty;
+    const raDobl = p.roundAbilities && p.roundAbilities.double;
+
+    let btnProt = `<button class="ability-btn ${!abProt && !raProt ? 'consumed' : ''} ${raProt ? 'active-power' : ''}" onclick="useAbility('protector')" ${!abProt ? 'disabled' : ''}>🛡️ Racha</button>`;
+    let btnFift = `<button class="ability-btn ${!abFift && !raFift ? 'consumed' : ''} ${raFift ? 'active-power' : ''}" onclick="useAbility('fiftyfifty')" ${!abFift ? 'disabled' : ''}>⚖️ 50/50</button>`;
+    let btnDobl = `<button class="ability-btn ${!abDobl && !raDobl ? 'consumed' : ''} ${raDobl ? 'active-power' : ''}" onclick="useAbility('double')" ${!abDobl ? 'disabled' : ''}>⚔️ x2</button>`;
 
     let m = localPlayer.fiftyFiftyMask || [];
 
@@ -360,17 +421,17 @@ function mobQuestion() {
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem; height:65vh;">
-            <button class="mobile-answer-btn color-0 ${m.includes(0) ? 'erased' : ''}" onclick="submitAnswer(0)"></button>
-            <button class="mobile-answer-btn color-1 ${m.includes(1) ? 'erased' : ''}" onclick="submitAnswer(1)"></button>
-            <button class="mobile-answer-btn color-2 ${m.includes(2) ? 'erased' : ''}" onclick="submitAnswer(2)"></button>
-            <button class="mobile-answer-btn color-3 ${m.includes(3) ? 'erased' : ''}" onclick="submitAnswer(3)"></button>
+            <button class="mobile-answer-btn color-0 ${m.includes(0) ? 'erased' : ''}" onclick="submitAnswer(0)" ${m.includes(0) ? 'disabled' : ''}></button>
+            <button class="mobile-answer-btn color-1 ${m.includes(1) ? 'erased' : ''}" onclick="submitAnswer(1)" ${m.includes(1) ? 'disabled' : ''}></button>
+            <button class="mobile-answer-btn color-2 ${m.includes(2) ? 'erased' : ''}" onclick="submitAnswer(2)" ${m.includes(2) ? 'disabled' : ''}></button>
+            <button class="mobile-answer-btn color-3 ${m.includes(3) ? 'erased' : ''}" onclick="submitAnswer(3)" ${m.includes(3) ? 'disabled' : ''}></button>
         </div>
       </div>
     `;
 }
 
 function mobReveal() {
-    if (!currentRevealData) return;
+    if (!currentRevealData || !localPlayer) return;
     const correct = currentRevealData.correctIndex === localPlayer.currentAnswer;
     const isGain = localPlayer.lastScoreChange >= 0;
 
@@ -380,19 +441,43 @@ function mobReveal() {
                 <h1 style="font-size:3rem; margin-bottom:1rem;">${correct ? '¡Exacto!' : '¡Error!'}</h1>
                 <p style="font-size:1.5rem;">Total: ${localPlayer.score} Puntos</p>
                 <div style="margin-top:2rem; font-size:1.2rem; background: rgba(0,0,0,0.3); padding:1rem; border-radius:10px;">
-                    ${isGain ? '+' : ''}${localPlayer.lastScoreChange} Puntos Obtenidos
+                    ${isGain ? '+' : ''}${localPlayer.lastScoreChange} Puntos
                 </div>
+                ${localPlayer.streak >= 2 ? `<div style="margin-top:1rem; color:#d89e00; font-size:1.3rem;">🔥 Racha x${localPlayer.streak}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function mobLeaderboard() {
+    if (!currentRoom || !localPlayer) return mobWait("Cargando ranking...");
+    
+    // Find player's rank
+    const allPlayers = Object.values(currentRoom.players);
+    const sorted = [...allPlayers].sort((a, b) => b.score - a.score);
+    const myRank = sorted.findIndex(p => p.sessionId === localPlayer.sessionId) + 1;
+    
+    app.innerHTML = `
+        <div class="mobile-container slide-up">
+            <div class="status-wait">
+                <div style="font-size:3rem; margin-bottom:1rem;">📊</div>
+                <div>Tu Posición: <span style="color:var(--primary); font-size:2rem;">#${myRank}</span></div>
+                <div style="margin-top:1rem; font-size:2rem; color:var(--primary); font-weight:bold;">${localPlayer.score} Pts</div>
+                ${localPlayer.streak >= 2 ? `<div style="margin-top:0.5rem; color:#d89e00;">🔥 Racha x${localPlayer.streak}</div>` : ''}
+                <p>Mira la pantalla del frente para ver el ranking completo.</p>
             </div>
         </div>
     `;
 }
 
 function mobEnd() {
+    sessionStorage.removeItem('gramsci_session');
     app.innerHTML = `
         <div class="mobile-container slide-up">
             <div class="status-wait">
                 <div style="font-size:4rem; margin-bottom:1rem;">🏁</div>
                 <div>Fin del Proyecto Hegemónico</div>
+                <p style="margin-top:1rem; font-size:1.3rem;">Tu puntaje final: <strong style="color:var(--primary);">${localPlayer ? localPlayer.score : 0} Pts</strong></p>
                 <p>Observa la pantalla principal para ver al intelectual supremo de la Guerra de Posiciones.</p>
             </div>
         </div>
@@ -401,12 +486,13 @@ function mobEnd() {
 
 
 window.joinRoom = () => {
-    const code = document.getElementById('j-code').value.toUpperCase();
-    const name = document.getElementById('j-name').value;
+    const code = document.getElementById('j-code').value.toUpperCase().trim();
+    const name = document.getElementById('j-name').value.trim();
     const avatar = document.getElementById('j-avatar').value;
     const group = document.getElementById('j-group').value;
 
-    if (!code || !name) return alert("Completa los campos.");
+    if (!code || !name) return alert("Completa todos los campos.");
+    if (code.length < 5) return alert("El PIN debe tener 5 letras.");
     
     const sessionId = Math.random().toString(36).substr(2, 9);
 
@@ -416,18 +502,20 @@ window.joinRoom = () => {
             sessionStorage.setItem('gramsci_session', JSON.stringify({roomId: code, sessionId: sessionId}));
             render();
         } else {
-            alert(res.message);
+            alert(res.message || "Error al unirse.");
         }
     });
 }
 
 window.useAbility = (ab) => {
-    if (!currentRoom || localPlayer.currentAnswer !== null) return;
-    if (!localPlayer.abilities[ab]) return;
+    if (!currentRoom || !localPlayer) return;
+    if (localPlayer.currentAnswer !== null) return;
+    if (!localPlayer.abilities || !localPlayer.abilities[ab]) return;
 
     socket.emit('activateAbility', { roomId: currentRoom.id, sessionId: localPlayer.sessionId, abilityName: ab }, (res) => {
-         if (res.success) {
+         if (res && res.success) {
              localPlayer.abilities[ab] = false;
+             if (!localPlayer.roundAbilities) localPlayer.roundAbilities = {};
              localPlayer.roundAbilities[ab] = true;
              if (res.disable) {
                  localPlayer.fiftyFiftyMask = res.disable;
@@ -438,9 +526,15 @@ window.useAbility = (ab) => {
 }
 
 window.submitAnswer = (idx) => {
-    if (!currentRoom) return;
+    if (!currentRoom || !localPlayer) return;
+    if (localPlayer.currentAnswer !== null) return; // prevent double-tap
+    
+    // Check if this option was erased by 50/50
+    const mask = localPlayer.fiftyFiftyMask || [];
+    if (mask.includes(idx)) return;
+    
     socket.emit('submitAnswer', { roomId: currentRoom.id, sessionId: localPlayer.sessionId, answerIndex: idx, timeRemaining: timerLeft }, (res) => {
-         if (res.success) {
+         if (res && res.success) {
              localPlayer.currentAnswer = idx; 
              render();
          }
